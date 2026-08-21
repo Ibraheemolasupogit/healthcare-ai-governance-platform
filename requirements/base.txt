@@ -1,0 +1,6 @@
+# Runtime dependencies, mirrored from pyproject.toml [project.dependencies].
+# Prefer `pip install -e .` for local development; this file exists for
+# environments that consume requirements files directly (e.g. some CI/CD
+# or container base images) instead of pyproject extras.
+pydantic>=2.6
+PyYAML>=6.0

@@ -1,0 +1,8 @@
+# Example configuration shape for governance_platform.config.load_settings.
+# No secrets belong in this file or any file like it — non-secret settings only.
+# Nothing in the platform consumes these values for governance decisions yet;
+# this illustrates the loader's expected shape for Milestone 1.
+
+platform_name: healthcare-ai-governance-platform
+environment: dev
+log_level: INFO

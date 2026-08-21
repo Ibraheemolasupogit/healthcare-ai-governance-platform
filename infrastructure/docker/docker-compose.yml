@@ -1,0 +1,15 @@
+# Local development convenience only — not a deployment configuration.
+# Usage: docker compose -f infrastructure/docker/docker-compose.yml run --rm dev
+
+services:
+  dev:
+    build:
+      context: ../..
+      dockerfile: infrastructure/docker/Dockerfile
+    volumes:
+      - ../..:/workspace
+    working_dir: /workspace
+    command: bash
+    environment:
+      PYTHONDONTWRITEBYTECODE: "1"
+      PYTHONUNBUFFERED: "1"
