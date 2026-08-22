@@ -19,5 +19,11 @@ As of Milestone 3, `access/` is populated by running `python scripts/generate_ac
 root [README's Access outputs section](../README.md#access-outputs)): the deterministic synthetic
 access requests, approval decisions, and grants produced by running the Milestone 3 scenarios
 through `governance_platform.access.AccessControlService` against the Milestone 2 inventory, plus
-an aggregate access-review summary. No audit-event simulation or evidence-pack generation exists
-yet.
+an aggregate access-review summary.
+
+As of Milestone 4, `evidence/` is populated by running `python scripts/generate_evidence.py` (see
+the root [README's Evidence outputs section](../README.md#evidence-outputs)): the append-only audit
+log (JSON and CSV) built deterministically from the existing inventory and access-control output, an
+aggregate audit summary, and a deterministic, reviewer-readable evidence pack (JSON and Markdown).
+This is a local governance simulation — no live Snowflake query-history/audit-log ingestion, SIEM,
+Microsoft Purview, or Entra ID integration exists.

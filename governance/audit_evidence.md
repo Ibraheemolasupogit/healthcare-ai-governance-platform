@@ -36,8 +36,20 @@ those domains, not a producer of governance decisions itself.
 
 ## Current status
 
-**Not implemented.** No audit event store, event emission, or evidence generation exists in this
-repository. There is no audit-event simulator. This document describes the intended process only.
+**Partially implemented (Milestone 4), as a local, deterministic governance simulation.**
+`src/governance_platform/audit/` implements a typed, immutable `AuditEvent`, an append-only
+`AuditLog` (no update/remove method on its public API — corrections would be new events, not
+edits, exactly as described above), deterministic event generation over the existing Milestone 2/3
+inventory and access-control output, evidence-completeness checks, and a deterministic evidence
+pack (JSON and Markdown) built from references, identifiers, timestamps, decisions, and control
+outcomes. See the root [README's Evidence outputs section](../README.md#evidence-outputs) for the
+event taxonomy, correlation approach, and limitations.
+
+This is a local simulation over data this repository already generates, not a live event store —
+there is no audit-event *ingestion* from a real system: no Snowflake query-history/audit-log
+collection, no SIEM, no Microsoft Purview or Entra ID audit-log integration, and no real-time
+streaming. Generated evidence artifacts land in `outputs/evidence/`, which is gitignored, per the
+paragraph above.
 
 ## Related ADRs / planes
 

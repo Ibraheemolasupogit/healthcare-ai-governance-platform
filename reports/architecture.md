@@ -1,9 +1,10 @@
 # Platform Architecture
 
-**Status:** Milestone 1 (Platform Foundation), Milestone 2 (Synthetic Research & AI Inventory), and
-Milestone 3 (Access & Research Control Plane). This document describes the target architecture for
-the full platform and marks, plane by plane, what exists today versus what is designed but not yet
-built. Nothing described as "Planned" should be treated as available.
+**Status:** Milestone 1 (Platform Foundation), Milestone 2 (Synthetic Research & AI Inventory),
+Milestone 3 (Access & Research Control Plane), and Milestone 4 (Audit & Evidence Plane). This
+document describes the target architecture for the full platform and marks, plane by plane, what
+exists today versus what is designed but not yet built. Nothing described as "Planned" should be
+treated as available.
 
 **Data statement:** the platform is designed to operate on synthetic data only. No real patient
 data, no production Snowflake account, no Fabric tenant, and no live cloud infrastructure exist
@@ -75,7 +76,21 @@ Captures what actually happened — access grants exercised, queries run, models
 immutable, queryable trail, and produces the evidence artifacts an auditor or oversight body would
 request.
 
-- **Status:** Planned. `src/governance_platform/audit/` is scaffolded as a placeholder module.
+- **Status:** Implemented (Milestone 4), as a **local, deterministic governance simulation** — not
+  a production audit trail, live SIEM, or Snowflake/Entra ID/Microsoft Purview audit-log ingestion.
+  `src/governance_platform/audit/` provides a typed, immutable `AuditEvent` (nine event types
+  covering inventory creation/validation and the full access request → evaluation → decision →
+  grant → revocation/expiry lifecycle); an append-only `AuditLog` with no update/remove method,
+  enforcing unique event IDs and non-decreasing timestamps within each correlated activity; pure
+  adapter functions translating already-produced Milestone 2/3 records into events (without
+  wrapping or modifying `AccessControlService`); deterministic correlation IDs derived from
+  `request_id`; evidence-completeness checks; and a deterministic, reviewer-readable evidence pack
+  (JSON and Markdown) built from references, identifiers, timestamps, decisions, and control
+  outcomes rather than copied datasets. See the root
+  [README's Evidence outputs section](../README.md#evidence-outputs) for the full event taxonomy,
+  correlation approach, and limitations. Still not implemented: live Snowflake query-history/
+  audit-log ingestion, a real SIEM, Microsoft Purview or Entra ID audit-log ingestion, real-time
+  streaming, an incident-response engine, or any persistent backing store.
 
 ### 5. Risk / compliance plane
 
@@ -173,7 +188,10 @@ every other plane deploys onto — it doesn't produce governance data itself.
    against a fixed inventory snapshot passed in explicitly — not a live service a real requester
    calls, and not enforcement against Snowflake, Entra ID, or any other identity system.
 3. Every access grant exercised and every governed action taken is recorded by the **audit
-   plane** as an immutable event.
+   plane** as an immutable event. As of Milestone 4, this is a deterministic local translation of
+   Milestones 2–3's own output into `AuditEvent`s (`src/governance_platform/audit/`) — not a live
+   listener on a production system, and not fed by any real Snowflake/SIEM/Purview/Entra ID
+   audit-log source.
 4. The **risk/compliance plane** periodically scores inventory entities, access patterns, and
    audit history against defined controls, surfacing violations and drift.
 5. The **reporting plane** aggregates inventory, access, audit, and risk state into governance

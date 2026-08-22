@@ -18,9 +18,13 @@ each have a concrete, typed, validated counterpart in
 not live enforcement — in
 [`src/governance_platform/access/`](../src/governance_platform/access/), which also implements the
 "access requests must reference an approved, non-expired project" rule from
-[`research_approval.md`](research_approval.md). See each document's "Current status" section for
-exactly what that does and does not cover. The other domains below remain documentation of intent
-only.
+[`research_approval.md`](research_approval.md). As of Milestone 4,
+[`audit_evidence.md`](audit_evidence.md) has a concrete counterpart — again a local, deterministic
+simulation, not live audit-log ingestion — in
+[`src/governance_platform/audit/`](../src/governance_platform/audit/), which records the events the
+inventory and access planes above already produce. See each document's "Current status" section
+for exactly what that does and does not cover. The remaining domains below remain documentation of
+intent only.
 
 ## Domains
 

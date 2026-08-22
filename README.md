@@ -14,14 +14,15 @@ research they're approved for, how that activity is audited, how risk and compli
 and how all of it is reported to oversight stakeholders.
 
 The platform is being built in milestones. **This repository currently contains Milestone 1
-(Platform Foundation), Milestone 2 (Synthetic Research & AI Inventory), and Milestone 3 (Access &
-Research Control Plane).** Milestone 2 adds a typed, validated metadata/inventory plane and a
-deterministic synthetic dataset/model/research portfolio generated from it. Milestone 3 adds a
-**local governance simulation** of the access request → decision → grant → revocation/expiry
-workflow, evaluated deterministically against that inventory. No audit simulation, risk scoring,
-model approval automation, responsible AI automation, evidence generation, or live identity/RBAC
-enforcement has been implemented yet. See [Implemented vs. Planned](#implemented-vs-planned) below
-before assuming any capability exists.
+(Platform Foundation), Milestone 2 (Synthetic Research & AI Inventory), Milestone 3 (Access &
+Research Control Plane), and Milestone 4 (Audit & Evidence Plane).** Milestone 2 adds a typed,
+validated metadata/inventory plane and a deterministic synthetic dataset/model/research portfolio
+generated from it. Milestone 3 adds a **local governance simulation** of the access request →
+decision → grant → revocation/expiry workflow, evaluated deterministically against that inventory.
+Milestone 4 adds an append-only audit trail over Milestones 2–3's activity and a deterministic,
+reviewer-readable evidence pack derived from it. No risk scoring, model approval automation,
+responsible AI automation, or live identity/RBAC/SIEM enforcement has been implemented yet. See
+[Implemented vs. Planned](#implemented-vs-planned) below before assuming any capability exists.
 
 ## Platform intent
 
@@ -47,7 +48,8 @@ BI, Docker, Terraform, GitHub Actions, and policy-as-code tooling.
 ├── data/                       # Synthetic data only (empty; generated inventory lives in outputs/)
 ├── src/governance_platform/
 │   ├── inventory/              # Metadata/inventory plane: entities, generation, validation, I/O
-│   └── access/                 # Access/research-control plane: request/decision/grant simulation
+│   ├── access/                 # Access/research-control plane: request/decision/grant simulation
+│   └── audit/                  # Audit/evidence plane: append-only log + evidence-pack generation
 ├── governance/                 # Governance operating-model documentation
 ├── infrastructure/
 │   ├── docker/                 # Minimal local development container
@@ -59,19 +61,61 @@ BI, Docker, Terraform, GitHub Actions, and policy-as-code tooling.
 ├── config/                     # Non-secret configuration scaffolding
 ├── outputs/
 │   ├── inventory/              # Generated inventory CSV/JSON (gitignored, reproducible)
-│   └── access/                 # Generated access requests/decisions/grants (gitignored)
+│   ├── access/                 # Generated access requests/decisions/grants (gitignored)
+│   └── evidence/               # Generated audit log + evidence pack (gitignored)
 ├── reports/
 │   └── architecture.md         # Full architecture write-up + diagram
 ├── docs/
 │   └── architecture/decisions/ # Architecture Decision Records (ADRs)
 ├── scripts/
 │   ├── generate_inventory.py   # Generate/validate/export the synthetic inventory
-│   └── generate_access.py      # Generate/evaluate/validate/export the access-control state
-├── tests/                      # Foundation + inventory + access tests
+│   ├── generate_access.py      # Generate/evaluate/validate/export the access-control state
+│   └── generate_evidence.py    # Build the audit log/evidence pack from the above
+├── tests/                      # Foundation + inventory + access + audit tests
 └── .github/workflows/          # CI: install, lint, test, validate
 ```
 
 ## Implemented vs. Planned
+
+### Implemented (Milestone 4 — Audit & Evidence Plane)
+
+- The audit/evidence plane (`src/governance_platform/audit/`), as a **local, deterministic
+  governance simulation** — not a production audit trail or live SIEM: a typed, immutable
+  `AuditEvent` (`entities.py`) with enums for actor type, entity type, action, event type, and
+  outcome (`enums.py`), and structural invariants tying `action`/`entity_type` to `event_type` so
+  they can never drift apart; an append-only `AuditLog` (`log.py`) with no update/remove method —
+  `append()` always returns a new log — enforcing unique `event_id`s and non-decreasing timestamps
+  within each correlated activity
+- Pure adapter functions (`adapters.py`) that translate already-produced Milestone 2/3 records into
+  audit events without wrapping or modifying `AccessControlService` — the access plane stays
+  independently testable — plus a deterministic orchestration layer (`generation.py`) that builds
+  the full log from the existing `generate_portfolio()`/`generate_access_control_state()` output
+  (no separate synthetic universe) with sequential `AE-0001`, `AE-0002`, ... event IDs and
+  correlation IDs derived from `request_id` (`CORR-{request_id}`), so a whole
+  request → evaluation → decision → grant → revocation/expiry activity is traceable as one group
+- Evidence-completeness checks (`completeness.py`) — every request has an evaluation event, every
+  rejected request has rejection evidence, every grant has a creation event, every revoked grant
+  has a revocation event, and every referenced ID resolves where a valid reference is actually
+  expected — returning human-readable problems rather than raising
+- A deterministic, reviewer-readable evidence pack (`evidence.py`, rendered by `markdown.py`):
+  inventory/access-control/audit summaries, per-request and per-grant evidence, correlation-group
+  traceability, a control-assurance summary, and a factual limitations section — derived entirely
+  from references, identifiers, timestamps, decisions, and control outcomes, never full dataset
+  records
+- Loading, export, and standalone validation (`io.py`, `validation.py`) — see
+  [Evidence outputs](#evidence-outputs) below
+- `scripts/generate_evidence.py` — loads the inventory, runs the access scenarios, builds the audit
+  log, checks completeness, derives and exports the evidence pack, then reloads and re-validates
+  the canonical JSON in one reproducible command
+- pytest coverage for event validation, immutability, deterministic IDs, duplicate/ordering
+  rejection, filtering, correlation, full request→decision→grant event chains, rejected/revoked/
+  expired evidence, completeness validation (including invalid references), evidence-pack
+  generation, JSON round-tripping, and the synthetic-data safeguards
+
+This is a local simulation over Milestones 2–3's own output — it does not implement a real SIEM,
+cloud audit service, Snowflake query-history ingestion, Microsoft Purview or Entra ID audit-log
+ingestion, real-time streaming, or an incident-response engine (see
+[Explicit non-goals](#explicit-non-goals) below).
 
 ### Implemented (Milestone 3 — Access & Research Control Plane)
 
@@ -160,10 +204,13 @@ automation, or any Snowflake connectivity (see [Explicit non-goals](#explicit-no
 - Periodic access recertification (the "reconfirm continued need, or revoke" cadence described in
   [`governance/access_review.md`](governance/access_review.md))
 - Research workspace provisioning
-- An audit-event simulator and evidence trail generator
+- Live Snowflake audit-log/query-history ingestion, a real SIEM, Microsoft Purview integration, or
+  Entra ID audit-log ingestion feeding the audit plane — Milestone 4's audit log is local and
+  self-contained, not fed by any of these
+- Real-time event streaming or production observability of any kind
+- An incident-response engine
 - A risk-scoring and compliance-monitoring engine, including any calculated enterprise risk score
 - A model approval / responsible-AI review workflow with automated checks
-- Automated evidence-pack generation for audits
 - A built Fabric semantic model
 - Published Power BI governance dashboards
 - Any live Terraform deployment or cloud provisioning
@@ -173,12 +220,15 @@ assumed to exist.
 
 ### Explicit non-goals
 
-Milestones 2 and 3 are metadata, inventory, and a local access-control **simulation** only. They do
-not implement: Snowflake connectivity or deployed schemas, live Snowflake RBAC or user/role
-provisioning, Entra ID integration, authentication, real user accounts, cloud identity, audit-event
-simulation, a risk-scoring engine, policy-as-code execution, approval-workflow automation,
-responsible-AI automation, evidence-pack generation, Fabric semantic models, Power BI dashboards,
-Terraform deployment, Salesforce workflows, or production access enforcement of any kind. These
+Milestones 2–4 are metadata, inventory, and local access-control and audit/evidence
+**simulations** only. They do not implement: Snowflake connectivity or deployed schemas, live
+Snowflake RBAC or user/role provisioning, Entra ID integration, authentication, real user accounts,
+cloud identity, live Snowflake query-history/audit-log ingestion, a real SIEM, Microsoft Purview
+integration, Entra ID audit-log ingestion, real-time streaming, production observability, an
+incident-response engine, a risk-scoring engine, a generic policy-as-code engine, approval-workflow
+automation, responsible-AI automation, model approval automation, Fabric semantic models, Power BI
+dashboards, Terraform deployment, Salesforce workflows, regulatory certification, or production
+access/audit enforcement of any kind. These
 remain [Planned](#planned-later-milestones--not-implemented-in-this-repository-yet) above.
 
 ## Getting started (local development)
@@ -200,6 +250,9 @@ python scripts/generate_inventory.py
 
 # Generate, evaluate, export, and validate the synthetic access-control state (Milestone 3):
 python scripts/generate_access.py
+
+# Build the audit log, check completeness, and generate the evidence pack (Milestone 4):
+python scripts/generate_evidence.py
 ```
 
 ### Using Docker instead
@@ -266,10 +319,10 @@ CLI-style reporting against hand-edited or externally-produced inventory data.
 This is metadata about datasets, models, and research projects — not the datasets, models, or
 research workspaces themselves. No model training, deployment, inference, or monitoring; no
 research workspace provisioning; no approval-workflow automation. As of Milestone 3, the access
-plane below reads this inventory for eligibility evaluation; no audit or risk-scoring logic reads
-it yet (those remain [Planned](#planned-later-milestones--not-implemented-in-this-repository-yet)).
-No calculated enterprise risk score is produced — `inventory_summary.json` is counts and
-breakdowns only.
+plane reads this inventory for eligibility evaluation, and as of Milestone 4, the audit/evidence
+plane reads both for evidence generation; no risk-scoring logic reads either yet (that remains
+[Planned](#planned-later-milestones--not-implemented-in-this-repository-yet)). No calculated
+enterprise risk score is produced — `inventory_summary.json` is counts and breakdowns only.
 
 ## Access outputs
 
@@ -354,11 +407,108 @@ eligibility policy, which is a property of a request/inventory pair, not of a st
 This is a **local governance simulation**: typed records and deterministic policy evaluation run
 in-process against an in-memory inventory snapshot. It does not authenticate anyone, does not call
 Snowflake, Entra ID, or any other identity system, does not provision or enforce real access to
-anything, and does not simulate audit events or compute a risk score (those remain
-[Planned](#planned-later-milestones--not-implemented-in-this-repository-yet)). Periodic access
-recertification (`governance/access_review.md`'s "reconfirm continued need, or revoke" cadence) is
-also not implemented — a grant's activity is always recomputed from its fixed window, not
+anything, and does not compute a risk score (that remains
+[Planned](#planned-later-milestones--not-implemented-in-this-repository-yet)). As of Milestone 4,
+this plane's activity is recorded by the audit/evidence plane below — see
+[Evidence outputs](#evidence-outputs). Periodic access recertification (`governance/access_review.md`'s
+"reconfirm continued need, or revoke" cadence) is also not implemented — a grant's activity is
+always recomputed from its fixed window, not
 re-reviewed on a cadence.
+
+## Evidence outputs
+
+`python scripts/generate_evidence.py` writes the following to `outputs/evidence/` (gitignored —
+reproducible from `src/governance_platform/audit/`, not stored as static artifacts, per ADR
+[0005](docs/architecture/decisions/0005-policy-as-code-and-evidence-as-code.md)):
+
+```text
+outputs/evidence/audit_events.json    # canonical, lossless JSON — the full AuditLog
+outputs/evidence/audit_events.csv
+outputs/evidence/audit_summary.json   # aggregate counts by type, outcome, entity type, project
+outputs/evidence/evidence_pack.json   # canonical, lossless JSON — the full EvidencePack
+outputs/evidence/evidence_pack.md     # reviewer-readable Markdown rendering of the same pack
+```
+
+### Append-only audit model
+
+`AuditEvent` (`src/governance_platform/audit/entities.py`) is frozen and `extra="forbid"`, exactly
+like the inventory and access entities. `AuditLog` (`log.py`) holds a tuple of events and exposes
+no update/remove method on its public API — `append(event)` returns a **new** `AuditLog` rather
+than mutating the one it was called on, and re-validates the full resulting sequence: duplicate
+`event_id`s are rejected, and within each correlation group (below), a newly appended event's
+`occurred_at` may not be earlier than the previous event recorded in that group. This mirrors
+`governance/audit_evidence.md`'s "audit events are append-only; corrections are recorded as new
+events, not edits to history."
+
+### Event taxonomy
+
+A restrained set of nine `AuditEventType` values covers exactly the actions the inventory and
+access planes actually perform — nothing speculative:
+
+`inventory_created`, `inventory_validated`, `access_requested`, `access_evaluated`,
+`access_approved`, `access_rejected`, `grant_created`, `grant_revoked`, `grant_expired`.
+
+Each event type is tied by construction to exactly one `entity_type` (`inventory` /
+`access_request` / `access_grant`) and one normalized `action` verb (e.g. both
+`inventory_created` and `grant_created` carry `action=create`) — `AuditEvent` rejects a mismatch at
+construction time rather than relying on caller discipline. `outcome` (`success` / `denied` /
+`revoked` / `expired`) records the governance-relevant result; `reason` carries the decision/
+revocation reason for a denial or revocation. `metadata` is a small `dict[str, str]` for
+non-sensitive context (e.g. a dataset/model count); entity-level validation rejects any metadata
+entry that looks like it might contain a secret or patient-level marker (`ssn`, `password`,
+`token`, `mrn`, `patient`, etc.) as a structural, not just conventional, safeguard.
+
+### Correlation approach
+
+Every event carries a `correlation_id` so a whole governance activity — request → evaluation →
+approval/rejection → grant creation → revocation/expiry — is discoverable as one group via
+`AuditLog.filter_by_correlation_id`/`correlation_groups`. Correlation IDs are **derived, not
+randomly generated**: `governance_platform.audit.adapters.request_correlation_id(request_id)`
+returns `f"CORR-{request_id}"` (e.g. `CORR-AR-0001`), so every event tied to that request —
+including any grant created from it — shares the same id by construction. The two inventory-plane
+events share a fixed `CORR-INVENTORY-0001`.
+
+### Evidence-pack composition
+
+`EvidencePack` (`evidence.py`) is a pure function of the inventory, access-control state, audit
+log, and explicitly supplied `generated_at`/`evaluated_at` timestamps — never the system clock. It
+does not copy full dataset/model/project records; it carries counts, breakdowns, identifiers,
+timestamps, decisions, and control outcomes: inventory evidence (counts + status breakdowns),
+access-request evidence, approval-decision evidence, grant evidence (status as of the evaluation
+instant), rejected-access evidence, correlation-group evidence (the event-type chain and final
+outcome per activity), a completeness result, and a fixed `limitations` section. `markdown.py`
+renders the same pack as reviewer-readable Markdown with no new computation — evidence-pack ID,
+generation timestamp, scope, source systems, inventory/access-control summaries, key audit events
+(grouped by correlation), rejected-access evidence, active/expired/revoked grant evidence, a
+control-assurance summary, and limitations, in that order.
+
+### Evidence-completeness validation
+
+`governance_platform.audit.completeness.check_completeness(audit_log, inventory, access_state)` is
+**evidence completeness validation, not a generic policy engine** — it asks "is evidence we'd
+expect to exist actually present?", not "was the governed activity correct?" (that's
+`governance_platform.access.policy`'s job). It checks: every access request has an
+`access_evaluated` event; every rejected request has an `access_rejected` event; every grant has a
+`grant_created` event; every revoked grant has a `grant_revoked` event; every emitted `event_id` is
+unique; and every `request_id`/`decision_id`/`grant_id` reference resolves. A
+`research_project_id` is only required to resolve on events that could only exist once a project
+was already validated (`access_approved`, `grant_created`, `grant_revoked`, `grant_expired`) — a
+request rejected specifically because it named an unknown project still carries that (unresolved)
+project id on its `access_requested`/`access_evaluated`/`access_rejected` events, which is the
+audit trail correctly preserving what was claimed, not a completeness gap.
+
+### Synthetic/local nature and relationship to the inventory and access planes
+
+This is a **local, deterministic governance simulation** layered over Milestones 2–3's own output
+— `generate_audit_log` takes the exact `InventoryPortfolio`/`AccessControlPortfolio` those
+milestones' generators produce (or any equivalent reloaded state) and translates it into events via
+pure adapter functions; it does not create a separate synthetic universe, and it does not wrap or
+modify `AccessControlService`, so the access plane remains independently testable. It does not
+implement a real SIEM, cloud audit service, Snowflake query-history ingestion, Microsoft Purview or
+Entra ID audit-log ingestion, real-time streaming, or an incident-response engine (those remain
+[Planned](#planned-later-milestones--not-implemented-in-this-repository-yet)). No enterprise risk
+score is produced, and nothing here claims regulatory certification or production audit-trail
+status — see the evidence pack's own `limitations` section.
 
 ## Architecture and design records
 
@@ -369,6 +519,8 @@ re-reviewed on a cadence.
   metadata/inventory plane implementation
 - [`src/governance_platform/access/`](src/governance_platform/access/) — the Milestone 3
   access/research-control plane implementation
+- [`src/governance_platform/audit/`](src/governance_platform/audit/) — the Milestone 4
+  audit/evidence plane implementation
 - [`governance/`](governance/) — operating-model documentation per governance domain
 - [`infrastructure/snowflake/`](infrastructure/snowflake/) — intended Snowflake governance
   responsibilities (no live account)
