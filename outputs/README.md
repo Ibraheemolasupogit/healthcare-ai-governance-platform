@@ -10,4 +10,7 @@ static artifacts in the repository.
 
 ## Current status
 
-Empty in Milestone 1 — no evidence generation or report-producing code exists yet.
+As of Milestone 2, `inventory/` is populated by running `python scripts/generate_inventory.py`
+(see the root [README's Inventory outputs section](../README.md#inventory-outputs)): the
+deterministic synthetic dataset/model/research-project inventory as JSON and CSV, plus an
+aggregate summary. No evidence-pack generation or audit-report-producing code exists yet.

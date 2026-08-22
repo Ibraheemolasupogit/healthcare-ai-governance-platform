@@ -9,9 +9,11 @@ def test_package_version_is_semver() -> None:
 
 
 def test_placeholder_plane_modules_import_cleanly() -> None:
-    # Milestone 1 ships these as placeholders with no governance logic; the
-    # meaningful assertion is that the package structure is importable and
-    # each plane module has a docstring describing its intended scope.
+    # access/audit/risk/responsible_ai/reporting remain Milestone 1 placeholders
+    # with no governance logic; inventory is implemented as of Milestone 2 (see
+    # tests/test_inventory_*.py). The meaningful assertion here is that the
+    # package structure is importable and each plane module has a docstring
+    # describing its (implemented or intended) scope.
     for module in (inventory, access, audit, risk, responsible_ai, reporting):
         assert module.__doc__ is not None
         assert module.__doc__.strip() != ""

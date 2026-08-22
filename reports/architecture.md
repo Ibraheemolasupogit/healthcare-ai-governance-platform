@@ -1,8 +1,9 @@
 # Platform Architecture
 
-**Status:** Milestone 1 — Platform Foundation. This document describes the target architecture
-for the full platform and marks, plane by plane, what exists today versus what is designed but
-not yet built. Nothing described as "Planned" should be treated as available.
+**Status:** Milestone 1 (Platform Foundation) and Milestone 2 (Synthetic Research & AI Inventory).
+This document describes the target architecture for the full platform and marks, plane by plane,
+what exists today versus what is designed but not yet built. Nothing described as "Planned" should
+be treated as available.
 
 **Data statement:** the platform is designed to operate on synthetic data only. No real patient
 data, no production Snowflake account, no Fabric tenant, and no live cloud infrastructure exist
@@ -33,8 +34,19 @@ The system of record for datasets and models: what exists, who owns it, its sens
 classification, its lineage, and its lifecycle state. This is the plane every other plane joins
 against — access decisions, audit records, and risk scores all reference an inventory entity.
 
-- **Status:** Planned. `data/` and `src/governance_platform/inventory/` are scaffolded; no
-  synthetic inventory dataset or inventory logic exists yet.
+- **Status:** Implemented (Milestone 2), as a local, code-defined system of record — not yet the
+  Snowflake-backed platform ADR
+  [0003](../docs/architecture/decisions/0003-snowflake-as-future-governed-platform.md) designates
+  as its eventual home. `src/governance_platform/inventory/` provides typed, pydantic-validated
+  Dataset, AIModel, and ResearchProject entities; an `InventoryPortfolio` enforcing cross-entity
+  referential integrity (no duplicate IDs, no dangling dataset/model references); deterministic
+  synthetic generation of a restrained six-dataset/five-model/four-project portfolio; JSON/CSV
+  export and load; and an aggregate governance summary. See the root
+  [README's Inventory outputs section](../README.md#inventory-outputs) for entity fields, output
+  locations, and limitations. Still not implemented: any persistent backing store, model
+  training/deployment/inference, research workspace provisioning, or approval-workflow automation
+  — those remain the concern of the access/research-control, risk/compliance, and engineering/
+  infrastructure planes below.
 
 ### 3. Access / research-control plane
 
@@ -137,7 +149,10 @@ every other plane deploys onto — it doesn't produce governance data itself.
 ## Data flow intent (target state, not current state)
 
 1. A dataset or model is registered in the **inventory plane** with an owner and sensitivity
-   classification, per rules defined in the **governance control plane**.
+   classification, per rules defined in the **governance control plane**. The inventory plane's
+   typed entities and validation exist as of Milestone 2 (`src/governance_platform/inventory/`);
+   the governance control plane's rules are still documented intent only (`governance/*.md`), not
+   an enforced policy engine the inventory reads from.
 2. A researcher requests access for an approved project through the **access plane**; the request
    is evaluated against inventory classification and control policy.
 3. Every access grant exercised and every governed action taken is recorded by the **audit

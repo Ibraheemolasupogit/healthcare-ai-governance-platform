@@ -10,6 +10,13 @@ these documents; they are the design and reference material a future implementat
 from. See [`reports/architecture.md`](../reports/architecture.md) for how each domain maps onto
 the platform's seven governance planes.
 
+As of Milestone 2, [`dataset_governance.md`](dataset_governance.md),
+[`model_governance.md`](model_governance.md), and [`research_approval.md`](research_approval.md)
+each have a concrete, typed, validated counterpart in
+[`src/governance_platform/inventory/`](../src/governance_platform/inventory/) — see each
+document's "Current status" section for exactly what that does and does not cover. The other
+domains below remain documentation of intent only.
+
 ## Domains
 
 | Document | Domain | Primary plane |

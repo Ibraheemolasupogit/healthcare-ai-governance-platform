@@ -33,9 +33,17 @@ data outside the platform's inventory.
 
 ## Current status
 
-**Not implemented.** `src/governance_platform/inventory/` is a placeholder module; no dataset
-registration, classification, or lifecycle logic exists. No synthetic dataset inventory has been
-generated yet.
+**Partially implemented (Milestone 2).** `src/governance_platform/inventory/` implements a typed,
+validated `Dataset` entity (owner, steward, sensitivity classification, data category, source
+type, lifecycle status, approval status, retention class) and a deterministic synthetic dataset
+portfolio covering operational, population-health, synthetic clinical-text, and research-feature
+datasets in approved, pending, and deprecated states. See the root
+[README's Inventory outputs section](../README.md#inventory-outputs).
+
+Still not implemented: enforcement of the lifecycle transitions described above (nothing stops a
+dataset being constructed directly in an "active" state without a recorded approval step), a
+persistent backing store, or any connection between this inventory and the access/research-control
+plane's grant decisions.
 
 ## Related ADRs / planes
 

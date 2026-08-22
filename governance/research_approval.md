@@ -33,8 +33,17 @@ datasets or models. A project must exist and be approved before an individual ac
 
 ## Current status
 
-**Not implemented.** No project intake, approval workflow, or expiry handling exists in this
-repository. This document describes the intended process only.
+**Partially implemented (Milestone 2).** `src/governance_platform/inventory/` implements a typed,
+validated `ResearchProject` entity (principal owner, purpose, `linked_dataset_ids`,
+`linked_model_ids`, approval status, risk classification, start/expiry dates, workspace status) as
+part of the metadata/inventory plane, and a deterministic synthetic portfolio covering approved,
+pending, and expired projects. A project's dataset/model references must resolve to entities that
+actually exist in the same inventory. See the root
+[README's Inventory outputs section](../README.md#inventory-outputs).
+
+Still not implemented: project intake, an approval workflow, expiry handling (an expired project's
+`approval_status` is asserted metadata, not computed or enforced against the current date), or
+workspace provisioning. This document describes the intended process only.
 
 ## Related ADRs / planes
 

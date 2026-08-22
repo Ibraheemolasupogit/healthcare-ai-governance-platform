@@ -40,6 +40,11 @@ any, is grantable).
 recertification engine exists in this repository. This document describes the intended process
 only; it is not an access-review engine.
 
+As of Milestone 2, the dataset/model classification this plane will depend on is a concrete,
+validated inventory (`src/governance_platform/inventory/`) rather than only a documented intent —
+see [`dataset_governance.md`](dataset_governance.md) and [`model_governance.md`](model_governance.md).
+No access-review logic reads that inventory yet.
+
 ## Related ADRs / planes
 
 - Plane: Access / research-control

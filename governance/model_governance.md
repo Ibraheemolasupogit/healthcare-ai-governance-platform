@@ -32,9 +32,17 @@ governance and belongs to the engineering/infrastructure plane.
 
 ## Current status
 
-**Not implemented.** `src/governance_platform/inventory/` is a placeholder module; no model
-registration, risk tiering, or approval workflow exists. No approval engine or automated review is
-implemented — see the explicit non-goals in the platform's Milestone 1 scope.
+**Partially implemented (Milestone 2).** `src/governance_platform/inventory/` implements a typed,
+validated `AIModel` entity (owner, intended use, model type, risk tier, responsible AI review
+status, monitoring requirement, `linked_dataset_ids`) and a deterministic synthetic model portfolio
+covering low, medium, and high risk tiers. A high-risk model cannot be constructed as
+`approval_status=approved` without `responsible_ai_review_status=approved`, and must have
+`monitoring_required=true` — encoding this document's core rule as a validation invariant rather
+than only prose. See the root [README's Inventory outputs section](../README.md#inventory-outputs).
+
+Still not implemented: model training, deployment, inference, or monitoring; an approval workflow
+or automated review engine (see the explicit non-goals in the platform's Milestone 2 scope); or any
+persistent backing store.
 
 ## Related ADRs / planes
 
