@@ -1,6 +1,7 @@
-"""Risk / compliance plane — risk scoring and compliance monitoring.
+"""Compatibility placeholder for the risk / compliance plane.
 
-Placeholder module for Milestone 1. No scoring engine or control evaluation
-is implemented yet. See ``governance/compliance_monitoring.md`` for the
-intended operating model this module will eventually implement.
+Milestone 5's implemented local deterministic control evaluation, bounded
+risk indicators, and posture reporting live in
+``governance_platform.compliance``. This module remains empty to avoid
+renaming churn for the original scaffold.
 """

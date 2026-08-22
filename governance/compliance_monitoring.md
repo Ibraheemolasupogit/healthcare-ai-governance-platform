@@ -2,43 +2,58 @@
 
 ## Purpose
 
-Define how the platform's ongoing compliance posture — across datasets, models, access, and audit
-history — is continuously scored and surfaced, so drift and violations are detected rather than
-discovered only at audit time.
+Define how the platform's compliance posture — across the local synthetic inventory,
+access-control state, audit trail, and evidence pack — is evaluated and surfaced in a
+deterministic, evidence-backed way.
 
 ## Scope
 
-Applies platform-wide: it is the aggregation layer that reads state from dataset/model governance,
-research approval, access review, and audit/evidence, and produces a risk/compliance posture over
-time. It does not itself hold source-of-truth governance state.
+Applies platform-wide within this repository's current local simulation: it reads state from
+dataset/model governance, research approval, access review, and audit/evidence, and produces a
+risk/compliance posture for a supplied evaluation timestamp. It does not itself hold
+source-of-truth governance state.
 
 ## Key roles
 
-- **Risk / compliance plane maintainer** — operates scoring logic and monitoring tooling.
+- **Risk / compliance plane maintainer** — operates control evaluation and scoring logic.
 - **Compliance officer** — consumes compliance posture and risk scores via the reporting plane
-  (Fabric / Power BI) and drives remediation.
+  generated Markdown/JSON outputs and, in a later milestone, through the reporting plane.
 - **Domain owners** (dataset, model, access) — responsible for remediating flagged issues in their
   domain.
 
-## Intended controls
+## Implemented controls
 
-- Defined controls (e.g. "no active access grant against an expired project," "no approved model
-  missing a responsible AI review at its risk tier") are evaluated against current governance and
-  audit state on a regular cadence, per the policy-as-code principle (ADR
+- A fixed control set is evaluated against the current deterministic governance state, per the
+  policy-as-code principle (ADR
   [0005](../docs/architecture/decisions/0005-policy-as-code-and-evidence-as-code.md)).
-- Violations and drift are recorded and surfaced through the reporting plane, not just logged
-  silently.
-- A risk score is computed per dataset, model, and/or project from classification, access
-  patterns, and audit history, giving oversight stakeholders a prioritised view rather than a raw
-  event list.
-- Compliance monitoring results feed evidence generation (see
-  [`audit_evidence.md`](audit_evidence.md)) so posture claims are backed by reproducible
-  evidence.
+- Control domains are restrained to: inventory governance, dataset governance, model governance,
+  research governance, access governance, audit completeness, evidence completeness, responsible
+  AI readiness, and operational governance.
+- Controls check inventory uniqueness and reference resolution, the synthetic-data-only invariant,
+  ownership/stewardship metadata, review dates, active grant compatibility with dataset/model/
+  project state, access-decision evidence, rejected-request handling, grant time bounds, audit
+  completeness, lifecycle events, correlation chains, duplicate audit IDs, and compliance
+  evidence-reference resolution.
+- All findings are returned rather than stopping at the first failure, with stable finding codes
+  and evidence references back to inventory, access, audit, evidence-pack, or ADR artifacts.
+- Risk indicators are derived only from warning and failed control results using the bounded
+  severity scale `low=1`, `medium=3`, `high=5`, `critical=8`, capped at 100 total. This is not
+  predictive modelling.
+- Posture thresholds are explicit: `healthy` when all controls pass, `attention_required` when any
+  warning/failure exists or score is at least 5, and `high_risk` for any critical failure, at
+  least 3 failures, or score at least 25.
 
 ## Current status
 
-**Not implemented.** No risk scoring engine, control evaluation, or monitoring tooling exists in
-this repository. This document describes the intended process only.
+**Implemented as of Milestone 5, locally and deterministically.**
+`src/governance_platform/compliance/` contains typed immutable control, result, risk indicator,
+summary, and assessment models; fixed control definitions; deterministic evaluation; bounded risk
+indicator derivation; posture classification; JSON/CSV/Markdown export; and validation helpers.
+`scripts/generate_compliance.py` writes reproducible outputs to `outputs/compliance/`.
+
+This is not formal regulatory compliance, NHS DSPT certification, UK GDPR certification, MHRA
+approval, ISO certification, live enterprise monitoring, alerting, or production policy
+enforcement.
 
 ## Related ADRs / planes
 

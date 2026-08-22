@@ -27,3 +27,10 @@ log (JSON and CSV) built deterministically from the existing inventory and acces
 aggregate audit summary, and a deterministic, reviewer-readable evidence pack (JSON and Markdown).
 This is a local governance simulation — no live Snowflake query-history/audit-log ingestion, SIEM,
 Microsoft Purview, or Entra ID integration exists.
+
+As of Milestone 5, `compliance/` is populated by running
+`python scripts/generate_compliance.py` (see the root
+[README's Compliance outputs section](../README.md#compliance-outputs)): deterministic control
+results, bounded risk indicators, a canonical compliance assessment summary, and a
+reviewer-readable governance posture report. This is local control evaluation over synthetic
+state only — not regulatory certification, live monitoring, alerting, or production enforcement.

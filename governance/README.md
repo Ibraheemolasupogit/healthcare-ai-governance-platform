@@ -22,9 +22,11 @@ not live enforcement — in
 [`audit_evidence.md`](audit_evidence.md) has a concrete counterpart — again a local, deterministic
 simulation, not live audit-log ingestion — in
 [`src/governance_platform/audit/`](../src/governance_platform/audit/), which records the events the
-inventory and access planes above already produce. See each document's "Current status" section
-for exactly what that does and does not cover. The remaining domains below remain documentation of
-intent only.
+inventory and access planes above already produce. As of Milestone 5,
+[`compliance_monitoring.md`](compliance_monitoring.md) has a concrete counterpart — local
+deterministic control evaluation and bounded risk indicators, not certification or live
+monitoring — in [`src/governance_platform/compliance/`](../src/governance_platform/compliance/).
+See each document's "Current status" section for exactly what that does and does not cover.
 
 ## Domains
 

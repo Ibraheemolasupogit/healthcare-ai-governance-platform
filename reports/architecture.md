@@ -1,10 +1,10 @@
 # Platform Architecture
 
 **Status:** Milestone 1 (Platform Foundation), Milestone 2 (Synthetic Research & AI Inventory),
-Milestone 3 (Access & Research Control Plane), and Milestone 4 (Audit & Evidence Plane). This
-document describes the target architecture for the full platform and marks, plane by plane, what
-exists today versus what is designed but not yet built. Nothing described as "Planned" should be
-treated as available.
+Milestone 3 (Access & Research Control Plane), Milestone 4 (Audit & Evidence Plane), and
+Milestone 5 (Risk & Compliance Monitoring Plane). This document describes the target architecture
+for the full platform and marks, plane by plane, what exists today versus what is designed but not
+yet built. Nothing described as "Planned" should be treated as available.
 
 **Data statement:** the platform is designed to operate on synthetic data only. No real patient
 data, no production Snowflake account, no Fabric tenant, and no live cloud infrastructure exist
@@ -97,9 +97,20 @@ request.
 Scores datasets, models, projects, and access patterns against defined controls and produces a
 compliance posture over time, including drift and violation detection.
 
-- **Status:** Planned. `src/governance_platform/risk/` is scaffolded as a placeholder module.
-  Responsible AI review criteria are documented in [`governance/responsible_ai.md`](../governance/responsible_ai.md)
-  but not automated.
+- **Status:** Implemented (Milestone 5), as a **local deterministic compliance assessment** over
+  the Milestone 2 inventory, Milestone 3 access-control state, and Milestone 4 audit/evidence
+  state — not formal regulatory compliance, live monitoring, alerting, or production policy
+  enforcement. `src/governance_platform/compliance/` provides typed immutable
+  `ControlDefinition`, `ControlResult`, `RiskIndicator`, `ComplianceSummary`, and
+  `ComplianceAssessment` models; a fixed set of controls across inventory governance, dataset
+  governance, model governance, research governance, access governance, audit completeness,
+  evidence completeness, responsible AI readiness, and operational governance; deterministic
+  evaluation that reuses existing access-policy, grant-activity, and audit-completeness logic;
+  bounded severity scoring (`low=1`, `medium=3`, `high=5`, `critical=8`, capped at 100); explicit
+  posture thresholds (`healthy`, `attention_required`, `high_risk`); JSON/CSV/Markdown export; and
+  validation helpers. Still not implemented: regulatory interpretation, certification, live
+  enterprise monitoring, alerting, predictive risk modelling, model-approval automation, or
+  responsible-AI workflow automation.
 
 ### 6. Reporting plane
 
@@ -192,8 +203,11 @@ every other plane deploys onto — it doesn't produce governance data itself.
    Milestones 2–3's own output into `AuditEvent`s (`src/governance_platform/audit/`) — not a live
    listener on a production system, and not fed by any real Snowflake/SIEM/Purview/Entra ID
    audit-log source.
-4. The **risk/compliance plane** periodically scores inventory entities, access patterns, and
-   audit history against defined controls, surfacing violations and drift.
+4. The **risk/compliance plane** evaluates inventory entities, access patterns, audit history, and
+   evidence references against fixed controls. As of Milestone 5, this exists as local
+   deterministic evaluation (`src/governance_platform/compliance/`) over explicitly supplied
+   synthetic state and timestamps. It produces compliance findings, bounded risk indicators, and a
+   governance posture; it is not a live monitoring service or certification engine.
 5. The **reporting plane** aggregates inventory, access, audit, and risk state into governance
    dashboards for oversight stakeholders.
 6. All of the above runs on infrastructure provisioned and operated by the **engineering /

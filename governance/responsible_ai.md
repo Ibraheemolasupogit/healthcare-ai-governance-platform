@@ -16,8 +16,8 @@ synthetic research context) require deeper review.
 
 - **Model risk reviewer** — evaluates a model against these criteria and records findings.
 - **Model owner** — responsible for remediating findings before re-review.
-- **Risk / compliance plane maintainer** — operates any tooling that runs automated portions of
-  this review in a later milestone.
+- **Risk / compliance plane maintainer** — operates control checks that track responsible-AI
+  readiness signals already present in the inventory.
 
 ## Intended review criteria
 
@@ -34,9 +34,11 @@ synthetic research context) require deeper review.
 
 ## Current status
 
-**Not implemented.** No automated responsible AI checks, scoring, or review tooling exist in this
-repository. This document defines criteria for a future reviewer (human or automated) to apply; it
-is not itself an enforcement mechanism.
+**Partially represented as of Milestone 5.** The compliance plane checks inventory metadata for
+approved high-risk models without approved responsible-AI review, approved high-risk models
+without monitoring required, and non-approved high-risk models that should not be treated as ready
+for approved use. It does not automate the responsible-AI review workflow, compute fairness or
+robustness metrics, approve models, or replace human review.
 
 ## Related ADRs / planes
 

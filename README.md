@@ -15,13 +15,16 @@ and how all of it is reported to oversight stakeholders.
 
 The platform is being built in milestones. **This repository currently contains Milestone 1
 (Platform Foundation), Milestone 2 (Synthetic Research & AI Inventory), Milestone 3 (Access &
-Research Control Plane), and Milestone 4 (Audit & Evidence Plane).** Milestone 2 adds a typed,
-validated metadata/inventory plane and a deterministic synthetic dataset/model/research portfolio
-generated from it. Milestone 3 adds a **local governance simulation** of the access request →
-decision → grant → revocation/expiry workflow, evaluated deterministically against that inventory.
-Milestone 4 adds an append-only audit trail over Milestones 2–3's activity and a deterministic,
-reviewer-readable evidence pack derived from it. No risk scoring, model approval automation,
-responsible AI automation, or live identity/RBAC/SIEM enforcement has been implemented yet. See
+Research Control Plane), Milestone 4 (Audit & Evidence Plane), and Milestone 5 (Risk &
+Compliance Monitoring Plane).** Milestone 2 adds a typed, validated metadata/inventory plane and
+a deterministic synthetic dataset/model/research portfolio generated from it. Milestone 3 adds a
+**local governance simulation** of the access request → decision → grant → revocation/expiry
+workflow, evaluated deterministically against that inventory. Milestone 4 adds an append-only
+audit trail over Milestones 2–3's activity and a deterministic, reviewer-readable evidence pack
+derived from it. Milestone 5 adds deterministic control evaluation, compliance findings, bounded
+risk indicators, and a governance posture over that same local state. No model approval
+automation, responsible AI workflow automation, or live identity/RBAC/SIEM enforcement has been
+implemented yet. See
 [Implemented vs. Planned](#implemented-vs-planned) below before assuming any capability exists.
 
 ## Platform intent
@@ -49,7 +52,8 @@ BI, Docker, Terraform, GitHub Actions, and policy-as-code tooling.
 ├── src/governance_platform/
 │   ├── inventory/              # Metadata/inventory plane: entities, generation, validation, I/O
 │   ├── access/                 # Access/research-control plane: request/decision/grant simulation
-│   └── audit/                  # Audit/evidence plane: append-only log + evidence-pack generation
+│   ├── audit/                  # Audit/evidence plane: append-only log + evidence-pack generation
+│   └── compliance/             # Risk/compliance plane: controls, findings, posture outputs
 ├── governance/                 # Governance operating-model documentation
 ├── infrastructure/
 │   ├── docker/                 # Minimal local development container
@@ -70,12 +74,48 @@ BI, Docker, Terraform, GitHub Actions, and policy-as-code tooling.
 ├── scripts/
 │   ├── generate_inventory.py   # Generate/validate/export the synthetic inventory
 │   ├── generate_access.py      # Generate/evaluate/validate/export the access-control state
-│   └── generate_evidence.py    # Build the audit log/evidence pack from the above
-├── tests/                      # Foundation + inventory + access + audit tests
+│   ├── generate_evidence.py    # Build the audit log/evidence pack from the above
+│   └── generate_compliance.py  # Evaluate controls and export compliance posture
+├── tests/                      # Foundation + inventory + access + audit + compliance tests
 └── .github/workflows/          # CI: install, lint, test, validate
 ```
 
 ## Implemented vs. Planned
+
+### Implemented (Milestone 5 — Risk & Compliance Monitoring Plane)
+
+- The risk/compliance plane (`src/governance_platform/compliance/`), as a **local,
+  deterministic governance simulation** — not certification, live monitoring, alerting, or
+  production enforcement: typed, immutable `ControlDefinition`, `ControlResult`,
+  `RiskIndicator`, `ComplianceSummary`, and `ComplianceAssessment` models with strict enum
+  vocabularies for domain, status, severity, entity type, finding code, risk category, and posture
+- A fixed, restrained control set covering inventory governance, dataset governance, model
+  governance, research governance, access governance, audit completeness, evidence completeness,
+  responsible AI readiness, and operational governance; controls are ordinary Python functions,
+  not a generic rules DSL
+- Deterministic evaluation over the existing Milestone 2 inventory, Milestone 3 access-control
+  state, and Milestone 4 audit/evidence state, reusing `evaluate_eligibility`,
+  `AccessControlService.is_grant_active`, and `check_completeness` where those rules already
+  exist; all findings are returned rather than stopping at the first failure
+- Bounded, explainable risk indicators derived only from warning/failed control results:
+  `low=1`, `medium=3`, `high=5`, `critical=8`, capped at 100 total. Overall posture is
+  `healthy` when all controls pass, `attention_required` when any warning/failure exists or score
+  is at least 5, and `high_risk` for any critical failure, at least 3 failures, or score at least
+  25
+- Loading, export, standalone validation, and reviewer-readable Markdown posture reporting — see
+  [Compliance outputs](#compliance-outputs) below
+- `scripts/generate_compliance.py` — builds/loads the same deterministic inventory, access,
+  audit, and evidence state as prior milestones, evaluates controls, derives risk indicators and
+  posture, writes outputs, then reloads and re-validates canonical JSON in one reproducible
+  command
+- pytest coverage for model validation, deterministic ordering, inventory/dataset/model/research/
+  access/audit/evidence controls, simultaneous findings, severity handling, risk-score bounds,
+  posture thresholds, evidence references, negative fixtures, deterministic generation,
+  canonical JSON round-tripping, and synthetic-data safeguards
+
+This plane evaluates the local synthetic governance state only. It does not assert NHS DSPT,
+UK GDPR, MHRA, ISO, or any other regulatory certification; it does not monitor live systems,
+enforce access, train models, automate model approval, or replace human responsible-AI review.
 
 ### Implemented (Milestone 4 — Audit & Evidence Plane)
 
@@ -209,7 +249,6 @@ automation, or any Snowflake connectivity (see [Explicit non-goals](#explicit-no
   self-contained, not fed by any of these
 - Real-time event streaming or production observability of any kind
 - An incident-response engine
-- A risk-scoring and compliance-monitoring engine, including any calculated enterprise risk score
 - A model approval / responsible-AI review workflow with automated checks
 - A built Fabric semantic model
 - Published Power BI governance dashboards
@@ -220,15 +259,15 @@ assumed to exist.
 
 ### Explicit non-goals
 
-Milestones 2–4 are metadata, inventory, and local access-control and audit/evidence
+Milestones 2–5 are metadata, inventory, local access-control, audit/evidence, and compliance
 **simulations** only. They do not implement: Snowflake connectivity or deployed schemas, live
 Snowflake RBAC or user/role provisioning, Entra ID integration, authentication, real user accounts,
 cloud identity, live Snowflake query-history/audit-log ingestion, a real SIEM, Microsoft Purview
 integration, Entra ID audit-log ingestion, real-time streaming, production observability, an
-incident-response engine, a risk-scoring engine, a generic policy-as-code engine, approval-workflow
-automation, responsible-AI automation, model approval automation, Fabric semantic models, Power BI
-dashboards, Terraform deployment, Salesforce workflows, regulatory certification, or production
-access/audit enforcement of any kind. These
+incident-response engine, a generic policy-as-code engine, approval-workflow automation,
+responsible-AI workflow automation, model approval automation, Fabric semantic models, Power BI
+dashboards, Terraform deployment, Salesforce workflows, regulatory certification, live monitoring,
+alerting, or production access/audit/compliance enforcement of any kind. These
 remain [Planned](#planned-later-milestones--not-implemented-in-this-repository-yet) above.
 
 ## Getting started (local development)
@@ -253,6 +292,9 @@ python scripts/generate_access.py
 
 # Build the audit log, check completeness, and generate the evidence pack (Milestone 4):
 python scripts/generate_evidence.py
+
+# Evaluate controls, derive bounded risk indicators, and generate posture outputs (Milestone 5):
+python scripts/generate_compliance.py
 ```
 
 ### Using Docker instead
@@ -320,9 +362,10 @@ This is metadata about datasets, models, and research projects — not the datas
 research workspaces themselves. No model training, deployment, inference, or monitoring; no
 research workspace provisioning; no approval-workflow automation. As of Milestone 3, the access
 plane reads this inventory for eligibility evaluation, and as of Milestone 4, the audit/evidence
-plane reads both for evidence generation; no risk-scoring logic reads either yet (that remains
-[Planned](#planned-later-milestones--not-implemented-in-this-repository-yet)). No calculated
-enterprise risk score is produced — `inventory_summary.json` is counts and breakdowns only.
+plane reads both for evidence generation. As of Milestone 5, the compliance plane reads the
+inventory, access-control state, audit log, and evidence pack to evaluate deterministic controls
+and derive bounded risk indicators. `inventory_summary.json` itself remains counts and breakdowns
+only.
 
 ## Access outputs
 
@@ -407,9 +450,8 @@ eligibility policy, which is a property of a request/inventory pair, not of a st
 This is a **local governance simulation**: typed records and deterministic policy evaluation run
 in-process against an in-memory inventory snapshot. It does not authenticate anyone, does not call
 Snowflake, Entra ID, or any other identity system, does not provision or enforce real access to
-anything, and does not compute a risk score (that remains
-[Planned](#planned-later-milestones--not-implemented-in-this-repository-yet)). As of Milestone 4,
-this plane's activity is recorded by the audit/evidence plane below — see
+anything. As of Milestone 4, this plane's activity is recorded by the audit/evidence plane below,
+and as of Milestone 5 it is evaluated by the compliance plane for evidence-backed controls — see
 [Evidence outputs](#evidence-outputs). Periodic access recertification (`governance/access_review.md`'s
 "reconfirm continued need, or revoke" cadence) is also not implemented — a grant's activity is
 always recomputed from its fixed window, not
@@ -506,9 +548,44 @@ pure adapter functions; it does not create a separate synthetic universe, and it
 modify `AccessControlService`, so the access plane remains independently testable. It does not
 implement a real SIEM, cloud audit service, Snowflake query-history ingestion, Microsoft Purview or
 Entra ID audit-log ingestion, real-time streaming, or an incident-response engine (those remain
-[Planned](#planned-later-milestones--not-implemented-in-this-repository-yet)). No enterprise risk
-score is produced, and nothing here claims regulatory certification or production audit-trail
-status — see the evidence pack's own `limitations` section.
+[Planned](#planned-later-milestones--not-implemented-in-this-repository-yet)). Nothing here claims
+regulatory certification or production audit-trail status — see the evidence pack's own
+`limitations` section.
+
+## Compliance outputs
+
+`python scripts/generate_compliance.py` writes the following to `outputs/compliance/`
+(gitignored — reproducible from `src/governance_platform/compliance/`, not stored as static
+artifacts, per ADR [0005](docs/architecture/decisions/0005-policy-as-code-and-evidence-as-code.md)):
+
+```text
+outputs/compliance/control_results.json      # canonical control-result list
+outputs/compliance/control_results.csv
+outputs/compliance/risk_indicators.json      # bounded risk indicators from non-passing results
+outputs/compliance/compliance_summary.json   # canonical, lossless ComplianceAssessment
+outputs/compliance/governance_posture.md     # reviewer-readable posture report
+```
+
+The control flow is deterministic:
+
+```text
+Governance State -> Control Evaluation -> Compliance Findings -> Risk Indicators
+-> Governance Posture
+```
+
+Controls cover inventory identifiers and references, the synthetic-data-only invariant,
+ownership/stewardship and review metadata, granted dataset/model approval and lifecycle state,
+research project approval/expiry/scope for active grants, grant decision evidence, rejected
+request handling, grant time bounds, audit completeness, lifecycle events, correlation chains,
+duplicate audit IDs, evidence-reference resolution, and high-risk model readiness.
+
+Risk scoring is bounded and transparent: warning/failed findings become indicators scored by
+severity (`low=1`, `medium=3`, `high=5`, `critical=8`) with a total cap of 100. Posture is
+`healthy` when all controls pass, `attention_required` when any warning/failure exists or score is
+at least 5, and `high_risk` for any critical failure, at least 3 failures, or score at least 25.
+The generated canonical portfolio currently produces one responsible-AI readiness warning for the
+pending high-risk LLM (`MD-0003`) and no failures. This is not predictive modelling, regulatory
+certification, live monitoring, alerting, or production policy enforcement.
 
 ## Architecture and design records
 
@@ -521,6 +598,8 @@ status — see the evidence pack's own `limitations` section.
   access/research-control plane implementation
 - [`src/governance_platform/audit/`](src/governance_platform/audit/) — the Milestone 4
   audit/evidence plane implementation
+- [`src/governance_platform/compliance/`](src/governance_platform/compliance/) — the Milestone 5
+  risk/compliance monitoring plane implementation
 - [`governance/`](governance/) — operating-model documentation per governance domain
 - [`infrastructure/snowflake/`](infrastructure/snowflake/) — intended Snowflake governance
   responsibilities (no live account)
