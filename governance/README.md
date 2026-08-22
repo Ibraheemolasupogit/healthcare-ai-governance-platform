@@ -13,9 +13,14 @@ the platform's seven governance planes.
 As of Milestone 2, [`dataset_governance.md`](dataset_governance.md),
 [`model_governance.md`](model_governance.md), and [`research_approval.md`](research_approval.md)
 each have a concrete, typed, validated counterpart in
-[`src/governance_platform/inventory/`](../src/governance_platform/inventory/) — see each
-document's "Current status" section for exactly what that does and does not cover. The other
-domains below remain documentation of intent only.
+[`src/governance_platform/inventory/`](../src/governance_platform/inventory/). As of Milestone 3,
+[`access_review.md`](access_review.md) has a concrete counterpart — a local governance simulation,
+not live enforcement — in
+[`src/governance_platform/access/`](../src/governance_platform/access/), which also implements the
+"access requests must reference an approved, non-expired project" rule from
+[`research_approval.md`](research_approval.md). See each document's "Current status" section for
+exactly what that does and does not cover. The other domains below remain documentation of intent
+only.
 
 ## Domains
 

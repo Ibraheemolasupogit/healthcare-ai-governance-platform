@@ -1,9 +1,9 @@
 # Platform Architecture
 
-**Status:** Milestone 1 (Platform Foundation) and Milestone 2 (Synthetic Research & AI Inventory).
-This document describes the target architecture for the full platform and marks, plane by plane,
-what exists today versus what is designed but not yet built. Nothing described as "Planned" should
-be treated as available.
+**Status:** Milestone 1 (Platform Foundation), Milestone 2 (Synthetic Research & AI Inventory), and
+Milestone 3 (Access & Research Control Plane). This document describes the target architecture for
+the full platform and marks, plane by plane, what exists today versus what is designed but not yet
+built. Nothing described as "Planned" should be treated as available.
 
 **Data statement:** the platform is designed to operate on synthetic data only. No real patient
 data, no production Snowflake account, no Fabric tenant, and no live cloud infrastructure exist
@@ -53,7 +53,21 @@ against — access decisions, audit records, and risk scores all reference an in
 Governs who may access which dataset or model for which approved research purpose: request
 intake, approval workflow, time-bounded grants, and periodic access recertification.
 
-- **Status:** Planned. `src/governance_platform/access/` is scaffolded as a placeholder module.
+- **Status:** Implemented (Milestone 3), as a **local governance simulation** — not live identity
+  or Snowflake RBAC enforcement. `src/governance_platform/access/` provides typed, immutable
+  AccessRequest, ApprovalDecision, and AccessGrant entities; deterministic eligibility evaluation
+  against the Milestone 2 inventory (`policy.py`) covering project existence/approval/expiry,
+  dataset/model existence, project linkage, research-use permission, dataset/model approval state,
+  and requested-duration-vs-project-expiry; an `AccessControlService` orchestrating
+  request → decision → grant → revocation/expiry, with grant activity always computed from an
+  explicitly supplied evaluation instant, never the system clock; an `AccessControlPortfolio`
+  enforcing the access plane's own referential integrity (no duplicate IDs, no grant without an
+  approved decision); deterministic synthetic scenario generation; JSON/CSV export and load; and
+  an aggregate access-review summary. See the root
+  [README's Access outputs section](../README.md#access-outputs) for the full rule list, output
+  locations, and limitations. Still not implemented: periodic recertification, any persistent
+  backing store, authentication, real user accounts, or any live Snowflake/Entra ID/cloud identity
+  integration.
 
 ### 4. Audit / evidence plane
 
@@ -154,7 +168,10 @@ every other plane deploys onto — it doesn't produce governance data itself.
    the governance control plane's rules are still documented intent only (`governance/*.md`), not
    an enforced policy engine the inventory reads from.
 2. A researcher requests access for an approved project through the **access plane**; the request
-   is evaluated against inventory classification and control policy.
+   is evaluated against inventory classification and control policy. As of Milestone 3, this
+   evaluation exists as a deterministic local simulation (`src/governance_platform/access/`) run
+   against a fixed inventory snapshot passed in explicitly — not a live service a real requester
+   calls, and not enforcement against Snowflake, Entra ID, or any other identity system.
 3. Every access grant exercised and every governed action taken is recorded by the **audit
    plane** as an immutable event.
 4. The **risk/compliance plane** periodically scores inventory entities, access patterns, and

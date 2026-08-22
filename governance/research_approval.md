@@ -45,6 +45,12 @@ Still not implemented: project intake, an approval workflow, expiry handling (an
 `approval_status` is asserted metadata, not computed or enforced against the current date), or
 workspace provisioning. This document describes the intended process only.
 
+As of Milestone 3, "Access requests must reference an approved, non-expired project" (above) is a
+concrete, enforced check: `src/governance_platform/access/policy.py` rejects any access request
+whose referenced project is missing, not approved, or has `approval_status=expired` — see
+[`access_review.md`](access_review.md) and the root
+[README's Access outputs section](../README.md#access-outputs).
+
 ## Related ADRs / planes
 
 - Plane: Access / research-control

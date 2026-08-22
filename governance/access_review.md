@@ -36,14 +36,20 @@ any, is grantable).
 
 ## Current status
 
-**Not implemented.** No access-request intake, approval workflow, grant tracking, or
-recertification engine exists in this repository. This document describes the intended process
-only; it is not an access-review engine.
+**Partially implemented (Milestone 3), as a local governance simulation.**
+`src/governance_platform/access/` implements access-request intake, deterministic eligibility
+evaluation, approval/rejection decisions, and time-bounded grant creation/revocation against the
+Milestone 2 inventory (`src/governance_platform/inventory/`) — see the root
+[README's Access outputs section](../README.md#access-outputs) for the full rule list.
 
-As of Milestone 2, the dataset/model classification this plane will depend on is a concrete,
-validated inventory (`src/governance_platform/inventory/`) rather than only a documented intent —
-see [`dataset_governance.md`](dataset_governance.md) and [`model_governance.md`](model_governance.md).
-No access-review logic reads that inventory yet.
+This is a simulation run against an in-memory inventory snapshot with explicitly supplied
+timestamps, not a live service, not enforcement against a real identity system, and not connected
+to Snowflake or Entra ID. Still not implemented: periodic recertification of standing access (the
+"reconfirm continued need, or revoke" cadence described above), a persistent backing store, or any
+audit-event trail — this document's audit-event line still describes intent only (see
+[`audit_evidence.md`](audit_evidence.md)). "Access to higher-classification datasets requires a
+correspondingly senior approver" is also not implemented — the current policy checks are dataset/
+model/project state and linkage, not approver seniority.
 
 ## Related ADRs / planes
 

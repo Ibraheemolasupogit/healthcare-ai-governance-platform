@@ -14,11 +14,14 @@ research they're approved for, how that activity is audited, how risk and compli
 and how all of it is reported to oversight stakeholders.
 
 The platform is being built in milestones. **This repository currently contains Milestone 1
-(Platform Foundation) and Milestone 2 (Synthetic Research & AI Inventory).** Milestone 2 adds a
-typed, validated metadata/inventory plane and a deterministic synthetic dataset/model/research
-portfolio generated from it. No access review, audit simulation, risk scoring, model approval
-automation, responsible AI automation, or evidence generation has been implemented yet. See
-[Implemented vs. Planned](#implemented-vs-planned) below before assuming any capability exists.
+(Platform Foundation), Milestone 2 (Synthetic Research & AI Inventory), and Milestone 3 (Access &
+Research Control Plane).** Milestone 2 adds a typed, validated metadata/inventory plane and a
+deterministic synthetic dataset/model/research portfolio generated from it. Milestone 3 adds a
+**local governance simulation** of the access request → decision → grant → revocation/expiry
+workflow, evaluated deterministically against that inventory. No audit simulation, risk scoring,
+model approval automation, responsible AI automation, evidence generation, or live identity/RBAC
+enforcement has been implemented yet. See [Implemented vs. Planned](#implemented-vs-planned) below
+before assuming any capability exists.
 
 ## Platform intent
 
@@ -43,7 +46,8 @@ BI, Docker, Terraform, GitHub Actions, and policy-as-code tooling.
 .
 ├── data/                       # Synthetic data only (empty; generated inventory lives in outputs/)
 ├── src/governance_platform/
-│   └── inventory/              # Metadata/inventory plane: entities, generation, validation, I/O
+│   ├── inventory/              # Metadata/inventory plane: entities, generation, validation, I/O
+│   └── access/                 # Access/research-control plane: request/decision/grant simulation
 ├── governance/                 # Governance operating-model documentation
 ├── infrastructure/
 │   ├── docker/                 # Minimal local development container
@@ -54,18 +58,49 @@ BI, Docker, Terraform, GitHub Actions, and policy-as-code tooling.
 │   └── dashboards/             # Documented intent, no PBIX/dashboards built yet
 ├── config/                     # Non-secret configuration scaffolding
 ├── outputs/
-│   └── inventory/              # Generated inventory CSV/JSON (gitignored, reproducible)
+│   ├── inventory/              # Generated inventory CSV/JSON (gitignored, reproducible)
+│   └── access/                 # Generated access requests/decisions/grants (gitignored)
 ├── reports/
 │   └── architecture.md         # Full architecture write-up + diagram
 ├── docs/
 │   └── architecture/decisions/ # Architecture Decision Records (ADRs)
 ├── scripts/
-│   └── generate_inventory.py   # Generate/validate/export the synthetic inventory
-├── tests/                      # Foundation + inventory tests
+│   ├── generate_inventory.py   # Generate/validate/export the synthetic inventory
+│   └── generate_access.py      # Generate/evaluate/validate/export the access-control state
+├── tests/                      # Foundation + inventory + access tests
 └── .github/workflows/          # CI: install, lint, test, validate
 ```
 
 ## Implemented vs. Planned
+
+### Implemented (Milestone 3 — Access & Research Control Plane)
+
+- The access/research-control plane (`src/governance_platform/access/`), as a **local governance
+  simulation** — not live identity or Snowflake RBAC enforcement: typed, immutable
+  `AccessRequest`, `ApprovalDecision`, and `AccessGrant` entities (`entities.py`); deterministic
+  eligibility evaluation against the Milestone 2 inventory (`policy.py`) implementing the checks
+  in [Access outputs](#access-outputs) below; an `AccessControlService`
+  (`service.py`) orchestrating request → decision → grant → revocation/expiry, with grant
+  activity always computed from an explicitly supplied evaluation instant, never the system clock;
+  and an `AccessControlPortfolio` (`portfolio.py`) enforcing the access plane's own referential
+  integrity (no duplicate IDs, no grant without an approved decision, no grant exceeding what was
+  requested)
+- Deterministic synthetic scenario generation (`generation.py`): ten fixed requests run through the
+  real service against the Milestone 2 inventory, covering valid approved access; requests against
+  pending and expired projects; unlinked, research-use-prohibited, and unapproved datasets/models;
+  unknown dataset/model/project references; a duration exceeding project expiry; and, among the
+  approved requests, one active, one time-expired, and one explicitly revoked grant
+- Loading, export, standalone validation, and an aggregate access-review summary (`io.py`,
+  `validation.py`, `summary.py`) — see [Access outputs](#access-outputs) below
+- `scripts/generate_access.py` — loads the inventory, generates and evaluates the scenarios,
+  exports, reloads, and re-validates the access-control state in one reproducible command
+- pytest coverage for entity validation, policy evaluation (every rule below, individually),
+  service orchestration, referential integrity, deterministic generation, load/export
+  round-tripping, summary calculations, and the synthetic-data safeguards
+
+This is metadata and simulated decisions about access — it does not authenticate anyone, does not
+call Snowflake, Entra ID, or any other identity system, and does not provision or enforce real
+access to anything (see [Explicit non-goals](#explicit-non-goals) below).
 
 ### Implemented (Milestone 2 — Synthetic Research & AI Inventory)
 
@@ -87,8 +122,7 @@ BI, Docker, Terraform, GitHub Actions, and policy-as-code tooling.
 
 This plane is metadata about datasets, models, and research projects — it does not implement model
 training, deployment, inference, or monitoring, research workspace provisioning, approval-workflow
-automation, or any Snowflake connectivity (see [Explicit non-goals](#explicit-non-goals-of-milestone-2)
-below).
+automation, or any Snowflake connectivity (see [Explicit non-goals](#explicit-non-goals) below).
 
 ### Implemented (Milestone 1 — Platform Foundation)
 
@@ -118,14 +152,17 @@ below).
 ### Planned (later milestones — **not implemented in this repository yet**)
 
 - Live Snowflake schema, roles, tags, and masking policies against a real (still non-production,
-  sandbox-style) account backing the inventory (see ADR
+  sandbox-style) account backing the inventory and access grants (see ADR
   [0003](docs/architecture/decisions/0003-snowflake-as-future-governed-platform.md)) — this
-  milestone's inventory is local JSON/CSV, not a Snowflake integration
-- An access-review engine (request → approval → periodic recertification)
+  milestone's inventory and access state are local JSON/CSV, not a Snowflake integration
+- Live Snowflake RBAC / role-grant enforcement, and Snowflake user/role provisioning
+- Entra ID (or any other) identity integration, authentication, and real user accounts
+- Periodic access recertification (the "reconfirm continued need, or revoke" cadence described in
+  [`governance/access_review.md`](governance/access_review.md))
+- Research workspace provisioning
 - An audit-event simulator and evidence trail generator
 - A risk-scoring and compliance-monitoring engine, including any calculated enterprise risk score
 - A model approval / responsible-AI review workflow with automated checks
-- Research workspace provisioning
 - Automated evidence-pack generation for audits
 - A built Fabric semantic model
 - Published Power BI governance dashboards
@@ -134,14 +171,15 @@ below).
 Do not treat anything in this list as available — it is documented here precisely so it isn't
 assumed to exist.
 
-### Explicit non-goals of Milestone 2
+### Explicit non-goals
 
-Milestone 2 is metadata and inventory only. It does not implement: Snowflake connectivity or
-deployed schemas, an access-review engine, RBAC enforcement or access provisioning, audit-event
+Milestones 2 and 3 are metadata, inventory, and a local access-control **simulation** only. They do
+not implement: Snowflake connectivity or deployed schemas, live Snowflake RBAC or user/role
+provisioning, Entra ID integration, authentication, real user accounts, cloud identity, audit-event
 simulation, a risk-scoring engine, policy-as-code execution, approval-workflow automation,
 responsible-AI automation, evidence-pack generation, Fabric semantic models, Power BI dashboards,
-or any cloud/infrastructure deployment. These remain [Planned](#planned-later-milestones--not-implemented-in-this-repository-yet)
-above.
+Terraform deployment, Salesforce workflows, or production access enforcement of any kind. These
+remain [Planned](#planned-later-milestones--not-implemented-in-this-repository-yet) above.
 
 ## Getting started (local development)
 
@@ -159,6 +197,9 @@ python scripts/validate_repository.py
 
 # Generate, export, and validate the synthetic governance inventory (Milestone 2):
 python scripts/generate_inventory.py
+
+# Generate, evaluate, export, and validate the synthetic access-control state (Milestone 3):
+python scripts/generate_access.py
 ```
 
 ### Using Docker instead
@@ -224,10 +265,100 @@ CLI-style reporting against hand-edited or externally-produced inventory data.
 
 This is metadata about datasets, models, and research projects — not the datasets, models, or
 research workspaces themselves. No model training, deployment, inference, or monitoring; no
-research workspace provisioning; no approval-workflow automation; no access, audit, or risk-scoring
-logic reads this inventory yet (those remain [Planned](#planned-later-milestones--not-implemented-in-this-repository-yet)).
+research workspace provisioning; no approval-workflow automation. As of Milestone 3, the access
+plane below reads this inventory for eligibility evaluation; no audit or risk-scoring logic reads
+it yet (those remain [Planned](#planned-later-milestones--not-implemented-in-this-repository-yet)).
 No calculated enterprise risk score is produced — `inventory_summary.json` is counts and
 breakdowns only.
+
+## Access outputs
+
+`python scripts/generate_access.py` writes the following to `outputs/access/` (gitignored —
+reproducible from `src/governance_platform/access/`, not stored as static artifacts, per ADR
+[0005](docs/architecture/decisions/0005-policy-as-code-and-evidence-as-code.md)):
+
+```text
+outputs/access/access_control_state.json     # canonical, lossless JSON (requests + decisions + grants)
+outputs/access/access_requests.csv
+outputs/access/approval_decisions.csv
+outputs/access/access_grants.csv
+outputs/access/access_review_summary.json    # aggregate counts by status, grant activity, rejection reason
+```
+
+### Lifecycle: request -> decision -> grant -> revocation/expiry
+
+`governance_platform.access.AccessControlService`, given a Milestone 2 `InventoryPortfolio`
+snapshot, orchestrates four immutable steps — each one a new record, never an edit to a previous
+one (consistent with `governance/audit_evidence.md`'s append-only principle):
+
+1. **`submit_request(...)`** creates an `AccessRequest` (`request_id`, e.g. `AR-0001`) with
+   `status=submitted`. No eligibility check happens yet.
+2. **`decide(request, ...)`** evaluates the request via `evaluate_eligibility` (below), records an
+   `ApprovalDecision` (`decision_id`, e.g. `AD-0001`) with `decision=approved`/`rejected` and a
+   `decision_reason` built from every violation found, and returns a new `AccessRequest` with
+   `status` finalized to match — the original request object is left untouched (it is frozen).
+3. **`create_grant(request, decision, ...)`** creates a time-bounded `AccessGrant` (`grant_id`, e.g.
+   `AG-0001`) only from an approved decision — it raises `ValueError` for a rejected or
+   mismatched decision.
+4. **`revoke_grant(grant, ...)`** returns a new, revoked copy of a grant with `revoked_at` and
+   `revocation_reason` set. **`is_grant_active(grant, at)`** and **`expired_grants(grants, at)`**
+   determine activity purely from the explicitly supplied instant `at` against
+   `granted_at`/`expires_at`/`status` — never the system clock, so evaluation is reproducible
+   regardless of when it runs.
+
+### Policy checks implemented
+
+`governance_platform.access.policy.evaluate_eligibility(request, inventory)` is a pure function
+that checks, and reports *every* applicable violation for (not just the first):
+
+1. the referenced `ResearchProject` exists in the inventory
+2. it is `approval_status=approved`
+3. it is not `approval_status=expired`
+4. every requested dataset exists in the inventory
+5. every requested model exists in the inventory
+6. every requested dataset/model is already in the project's `linked_dataset_ids`/`linked_model_ids`
+7. every requested dataset has `research_use_allowed=true`
+8. every requested dataset and model is itself `approval_status=approved`
+9. `requested_until` does not fall after the project's `expiry_date`
+
+A request can fail for more than one reason at once — `EligibilityResult.violations` carries a
+structured `RejectionReasonCode` and a human-readable detail per violation, so every rejection is
+explainable. `AccessGrant` itself enforces rule 10 (time-bounded: `expires_at` must be after
+`granted_at`) and consistent revocation fields as entity-level invariants, and
+`AccessControlPortfolio` enforces rule 11 (no grant without an approved decision) as a
+cross-entity invariant — both fail construction rather than relying on caller discipline.
+
+### Generation and validation process
+
+`generation.py` runs ten fixed requests through the real `AccessControlService` against the
+Milestone 2 synthetic inventory — deterministic by construction, so
+`generate_access_control_state()` returns byte-identical data on every call. It covers: valid
+approved access; a pending project; an expired project; a dataset not linked to its project; a
+dataset whose research use is prohibited; a duration exceeding project expiry; unknown
+dataset/model references; an unknown research project; and, among the three approved requests, one
+grant left active, one left to expire by the fixed reference evaluation time
+(`REFERENCE_EVALUATION_TIME`, 2025-03-15 — a synthetic reference point, not "now"), and one
+explicitly revoked. Every `requester_id`/`approver_id` is a fictional, role-based access-plane
+identifier (e.g. `"researcher-population-health-01"`), never a real person's name.
+
+Validation happens in two layers, mirroring the inventory plane: pydantic raises immediately on
+construction (`AccessRequest(...)`, `AccessControlPortfolio(...)`), while
+`governance_platform.access.validation.validate_access_state_data`/`validate_access_state_file`
+return a list of human-readable problems instead of raising, for CLI-style reporting. That
+validation covers the access plane's own referential integrity only (duplicate IDs, dangling
+request references, grants without an approved decision) — it does not re-run inventory
+eligibility policy, which is a property of a request/inventory pair, not of a state file alone.
+
+### Synthetic/local nature and limitations
+
+This is a **local governance simulation**: typed records and deterministic policy evaluation run
+in-process against an in-memory inventory snapshot. It does not authenticate anyone, does not call
+Snowflake, Entra ID, or any other identity system, does not provision or enforce real access to
+anything, and does not simulate audit events or compute a risk score (those remain
+[Planned](#planned-later-milestones--not-implemented-in-this-repository-yet)). Periodic access
+recertification (`governance/access_review.md`'s "reconfirm continued need, or revoke" cadence) is
+also not implemented — a grant's activity is always recomputed from its fixed window, not
+re-reviewed on a cadence.
 
 ## Architecture and design records
 
@@ -236,6 +367,8 @@ breakdowns only.
   choices
 - [`src/governance_platform/inventory/`](src/governance_platform/inventory/) — the Milestone 2
   metadata/inventory plane implementation
+- [`src/governance_platform/access/`](src/governance_platform/access/) — the Milestone 3
+  access/research-control plane implementation
 - [`governance/`](governance/) — operating-model documentation per governance domain
 - [`infrastructure/snowflake/`](infrastructure/snowflake/) — intended Snowflake governance
   responsibilities (no live account)
