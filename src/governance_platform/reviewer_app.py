@@ -34,10 +34,12 @@ from governance_platform.reviewer import (  # noqa: E402
     load_reviewer_assurance_pack_state,
     load_reviewer_assurance_state,
     load_reviewer_policy_state,
+    load_reviewer_readiness_state,
     load_reviewer_state,
     missing_assurance_output_paths,
     missing_assurance_pack_output_paths,
     missing_policy_output_paths,
+    missing_readiness_output_paths,
     rejection_reason_rows,
     status_counts,
     synthetic_boundary_text,
@@ -566,6 +568,61 @@ def _assurance_review_pack_page() -> None:
     _table(evidence_rows, empty="No evidence-map rows match the selected filters.")
 
 
+def _review_readiness_page() -> None:
+    st.header("Review Readiness")
+    missing = missing_readiness_output_paths("outputs")
+    if missing:
+        st.info("Review-readiness outputs have not been generated yet.")
+        st.code("python3 scripts/generate_review_readiness.py", language="text")
+        _table(
+            tuple({"missing_path": str(path)} for path in missing),
+            empty="No missing readiness outputs.",
+        )
+        return
+
+    readiness_state = load_reviewer_readiness_state()
+    checklist = readiness_state.checklist
+    demo = readiness_state.demo_readiness
+    _metric_grid(
+        (
+            ("Readiness", checklist.readiness_status.value),
+            ("Demonstrated", checklist.passed_count),
+            ("Incomplete", checklist.incomplete_count),
+            ("Not applicable", checklist.not_applicable_count),
+            ("Environment blocked", checklist.environment_blocked_count),
+            ("Outputs present", demo.required_outputs_present),
+            ("Docs present", demo.documentation_present),
+            ("Evidence traceability", demo.evidence_traceability_available),
+        )
+    )
+
+    st.subheader("Acceptance Criteria")
+    status = _select_filter(
+        "Criterion status", unique_values(readiness_state.acceptance_result_rows, "status")
+    )
+    criterion_rows = filter_rows(
+        readiness_state.acceptance_result_rows,
+        equals={"status": status},
+    )
+    _table(criterion_rows, empty="No acceptance criteria match the selected filters.")
+
+    st.subheader("Artifact Completeness")
+    artifact_status = _select_filter(
+        "Artifact status", unique_values(readiness_state.artifact_rows, "status")
+    )
+    artifact_rows = filter_rows(
+        readiness_state.artifact_rows,
+        equals={"status": artifact_status},
+    )
+    _table(artifact_rows, empty="No artifact rows match the selected filters.")
+
+    st.subheader("Demo Readiness Issues")
+    _table(
+        tuple({"issue": issue} for issue in demo.issues),
+        empty="No demo-readiness issues detected.",
+    )
+
+
 def main() -> None:
     st.set_page_config(page_title="Governance Reviewer Portal", layout="wide")
     st.title("Governance Reviewer Portal")
@@ -589,6 +646,7 @@ def main() -> None:
             "Policy & Controls",
             "Assurance History / Drift",
             "Assurance Review Pack",
+            "Review Readiness",
         ),
     )
 
@@ -606,8 +664,10 @@ def main() -> None:
         _policy_controls_page()
     elif page == "Assurance History / Drift":
         _assurance_history_page()
-    else:
+    elif page == "Assurance Review Pack":
         _assurance_review_pack_page()
+    else:
+        _review_readiness_page()
 
 
 if __name__ == "__main__":

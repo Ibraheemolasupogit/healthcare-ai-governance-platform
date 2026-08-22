@@ -5,9 +5,10 @@ Milestone 3 (Access & Research Control Plane), Milestone 4 (Audit & Evidence Pla
 (Risk & Compliance Monitoring Plane), Milestone 6 (Governance Reporting & Semantic Plane),
 Milestone 7 (Local Governance Reviewer Portal), Milestone 8 (Reviewer Export & Demo
 Handoff), Milestone 9 (Policy & Control Catalog), Milestone 10 (Control Assurance History &
-Drift), and Milestone 11 (Integrated Assurance Review Pack). This document describes the target
-architecture for the full platform and marks, plane by plane, what exists today versus what is
-designed but not yet built. Nothing described as "Planned" should be treated as available.
+Drift), Milestone 11 (Integrated Assurance Review Pack), and Milestone 12 (Reviewer Acceptance &
+Demo Readiness). This document describes the target architecture for the full platform and marks,
+plane by plane, what exists today versus what is designed but not yet built. Nothing described as
+"Planned" should be treated as available.
 
 **Data statement:** the platform is designed to operate on synthetic data only. No real patient
 data, no production Snowflake account, no Fabric tenant, and no live cloud infrastructure exist
@@ -147,7 +148,10 @@ compliance officers, research leadership — via Fabric and Power BI.
   `outputs/assurance/` files exist. Milestone 11 adds
   `src/governance_platform/reviewer/assurance_pack.py`, `outputs/assurance_pack/`, and a
   read-only Assurance Review Pack page that cross-links briefing, policy/control, evidence, and
-  drift outputs for reviewer handoff. The
+  drift outputs for reviewer handoff. Milestone 12 adds
+  `src/governance_platform/reviewer/readiness.py`, `outputs/readiness/`, a blank walkthrough
+  notes template, and a read-only Review Readiness page for acceptance criteria, artifact
+  completeness, and demo-readiness evidence. The
   future Fabric semantic model and dashboard designs are specified in
   [`fabric/semantic_model/README.md`](../fabric/semantic_model/README.md) and
   [`fabric/dashboards/README.md`](../fabric/dashboards/README.md), but no Fabric workspace,
@@ -256,7 +260,10 @@ every other plane deploys onto — it doesn't produce governance data itself.
   policy/control catalog and traceability outputs locally. As of Milestone 10, reviewers can
   inspect generated assurance-history drift outputs locally. As of Milestone 11, reviewers can
   inspect a generated integrated assurance review pack locally; it is not workflow automation,
-  notification delivery, remediation, or a production assurance store.
+  notification delivery, remediation, or a production assurance store. As of Milestone 12,
+  reviewers can inspect generated review-readiness criteria, artifact completeness, and
+  demo-readiness evidence locally; this is not human sign-off, production acceptance,
+  governance-board approval, or certification.
 6. All of the above runs on infrastructure provisioned and operated by the **engineering /
    infrastructure plane** — currently a local Python package, a dev container, and CI; Snowflake
    and Fabric are documented intentions, not live systems.

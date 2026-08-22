@@ -75,3 +75,11 @@ finding/control/policy/evidence/drift map. This is reviewer handoff packaging ov
 synthetic outputs only — not new control logic, new risk scoring, workflow automation,
 notifications, remediation, production observability, external governance integration, or
 regulatory certification.
+
+As of Milestone 12, `readiness/` is populated by running
+`python scripts/generate_review_readiness.py` (see the root
+[README's Reviewer acceptance and demo readiness outputs section](../README.md#reviewer-acceptance-and-demo-readiness-outputs)):
+a deterministic acceptance checklist, semantic artifact completeness evidence, demo-readiness
+result, and concise review-readiness report. This is local review-readiness evidence only — not
+human review, organisational approval, governance-board sign-off, production acceptance, or
+regulatory certification.

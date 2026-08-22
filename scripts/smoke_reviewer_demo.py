@@ -2,8 +2,9 @@
 """Smoke-check the local reviewer demo handoff.
 
 The smoke check validates generated outputs, reviewer data loading, briefing
-construction, common drill-through/filter helpers, Streamlit availability, and
-a brief headless Streamlit startup. It stops the server before exiting.
+construction, common drill-through/filter helpers, policy/assurance/pack/readiness
+loading, deterministic readiness export behavior, Streamlit availability, and a
+brief headless Streamlit startup. It stops the server before exiting.
 """
 
 from __future__ import annotations
@@ -19,7 +20,7 @@ from governance_platform.reviewer.smoke import run_smoke_checks  # noqa: E402
 
 def main() -> int:
     try:
-        result = run_smoke_checks(OUTPUTS_ROOT, start_streamlit=True)
+        result = run_smoke_checks(OUTPUTS_ROOT, start_streamlit=True, include_extended=True)
     except Exception as exc:  # noqa: BLE001 - CLI smoke script reports any failed check.
         print("Reviewer demo smoke check FAILED:")
         print(f"  - {exc}")
@@ -30,6 +31,10 @@ def main() -> int:
     print(f"  briefing:          {result['briefing_id']}")
     print(f"  evidence refs:     {result['evidence_ref_count']}")
     print(f"  filtered views:    {result['filtered_view_count']}")
+    print(f"  policy trace rows: {result['policy_traceability_rows']}")
+    print(f"  control drifts:    {result['control_drift_rows']}")
+    print(f"  evidence map rows: {result['assurance_evidence_map_rows']}")
+    print(f"  readiness:         {result['readiness_status']}")
     print(f"  streamlit startup: {result['streamlit_headless_start']}")
     return 0
 

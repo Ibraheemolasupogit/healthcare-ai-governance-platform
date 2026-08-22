@@ -1,7 +1,7 @@
 # Reviewer Demo Runbook
 
 This runbook supports a local reviewer walkthrough of the synthetic healthcare AI governance
-platform through Milestone 11. It is for demonstration and review only.
+platform through Milestone 12. It is for demonstration and review only.
 
 ## 1. Environment Setup
 
@@ -43,15 +43,16 @@ Expected deterministic anchors:
 
 ## 4. Reviewer Export Generation
 
-Build the Milestone 8 reviewer handoff bundle, Milestone 9 policy/control catalog, and
-Milestone 10 assurance-history drift outputs, then build the Milestone 11 integrated assurance
-review pack.
+Build the Milestone 8 reviewer handoff bundle, Milestone 9 policy/control catalog,
+Milestone 10 assurance-history drift outputs, Milestone 11 integrated assurance review pack, and
+Milestone 12 review-readiness evidence.
 
 ```bash
 python scripts/generate_reviewer_bundle.py
 python scripts/generate_policy_catalog.py
 python scripts/generate_assurance_history.py
 python scripts/generate_assurance_pack.py
+python scripts/generate_review_readiness.py
 ```
 
 Generated files are written to `outputs/reviewer/`:
@@ -90,6 +91,18 @@ Integrated assurance review pack files are written to `outputs/assurance_pack/`:
 - `assurance_evidence_map.csv`
 - `assurance_review_pack.md`
 
+Review-readiness files are written to `outputs/readiness/`:
+
+- `acceptance_checklist.json`
+- `acceptance_checklist.csv`
+- `artifact_completeness.json`
+- `demo_readiness.json`
+- `review_readiness_report.md`
+
+The blank reviewer notes template is available at
+`docs/demo/reviewer-walkthrough-template.md`. It is not a completed review, approval, sign-off,
+production acceptance, or certification record.
+
 ## 5. Start The Streamlit Portal
 
 ```bash
@@ -111,7 +124,8 @@ Open the local URL printed by Streamlit. The app is local only and read only.
 9. Policy/control traceability
 10. Assurance history and drift
 11. Integrated assurance review pack
-12. Reviewer briefing export
+12. Review readiness
+13. Reviewer briefing export
 
 ## 7. What To Show On Each Portal Page
 
@@ -146,6 +160,10 @@ operational warning, and changed policy IDs `POL-0008` and `POL-0009`.
 reviewer actions `RA-0001` through `RA-0003`, and evidence map rows linking findings to policy,
 control, evidence, and drift IDs.
 
+**Review Readiness:** show checklist `RAC-0001`, demo-readiness result `DRR-0001`, demonstrated
+criteria, artifact completeness, the not-applicable formal-approval criterion, and the explicit
+claim boundaries.
+
 ## 8. Evidence IDs And Drill-through Paths
 
 Use these deterministic IDs during the review:
@@ -173,6 +191,9 @@ Use these deterministic IDs during the review:
 - `PF-0001` - priority finding for the controlled `CTRL-0005` new-warning drift
 - `PF-0002` - priority finding for the current `CTRL-0014` warning
 - `RA-0001` - first review-only action in the integrated pack
+- `RAC-0001` - review-readiness acceptance checklist
+- `DRR-0001` - demo-readiness result
+- `ACR-0013` - formal approval is not applicable
 
 Suggested drill-through path:
 
@@ -183,6 +204,7 @@ Executive posture -> Data & Model Governance filter risk_tier=high -> MD-0003
 -> Policy & Controls filter CTRL-0014 -> outputs/policy/policy_assurance_summary.md
 -> Assurance History / Drift -> outputs/assurance/assurance_drift_report.md
 -> Assurance Review Pack -> outputs/assurance_pack/assurance_review_pack.md
+-> Review Readiness -> outputs/readiness/review_readiness_report.md
 -> outputs/reviewer/reviewer_briefing.md
 ```
 
@@ -213,6 +235,7 @@ This demo is local, deterministic, read-only, and synthetic-data-only. It does n
 - real-time monitoring, scheduled evaluation, alerting, or enterprise observability
 - automatic remediation or a production history database
 - workflow automation, notifications, or external governance integrations
+- human review, organisational approval, governance-board sign-off, or production acceptance
 - Terraform deployment
 - Salesforce integration
 - regulatory certification

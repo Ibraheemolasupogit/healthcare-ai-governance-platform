@@ -18,8 +18,8 @@ The platform is being built in milestones. **This repository currently contains 
 Research Control Plane), Milestone 4 (Audit & Evidence Plane), Milestone 5 (Risk &
 Compliance Monitoring Plane), Milestone 6 (Governance Reporting & Semantic Plane), Milestone 7
 (Local Governance Reviewer Portal), Milestone 8 (Reviewer Export & Demo Handoff), Milestone 9
-(Policy & Control Catalog), Milestone 10 (Control Assurance History & Drift), and Milestone 11
-(Integrated Assurance Review Pack).**
+(Policy & Control Catalog), Milestone 10 (Control Assurance History & Drift), Milestone 11
+(Integrated Assurance Review Pack), and Milestone 12 (Reviewer Acceptance & Demo Readiness).**
 Milestone 2 adds a typed, validated metadata/inventory plane and a deterministic synthetic
 dataset/model/research portfolio generated from it. Milestone 3 adds a **local governance
 simulation** of the access request → decision → grant → revocation/expiry workflow, evaluated
@@ -34,10 +34,13 @@ runbook/smoke check. Milestone 9 adds a deterministic policy/control catalog and
 control-to-evidence traceability matrix over the implemented controls. Milestone 10 adds explicit
 local assurance snapshots and deterministic control/risk/posture drift reporting. Milestone 11
 adds a concise integrated assurance review pack that cross-links briefing, policy/control,
-evidence, and drift outputs for reviewer handoff. No model approval automation, responsible AI
-workflow automation, live identity/RBAC/SIEM enforcement, authentication, production hosting,
-scheduling, alerting, remediation, or Fabric/Power BI deployment has been implemented yet. See
-[Implemented vs. Planned](#implemented-vs-planned) below before assuming any capability exists.
+evidence, and drift outputs for reviewer handoff. Milestone 12 adds deterministic
+review-readiness criteria, artifact completeness checks, demo-readiness evidence, and a blank
+reviewer walkthrough notes template. No model approval automation, responsible AI workflow
+automation, live identity/RBAC/SIEM enforcement, authentication, production hosting, scheduling,
+alerting, remediation, formal sign-off, production acceptance, or Fabric/Power BI deployment has
+been implemented yet. See [Implemented vs. Planned](#implemented-vs-planned) below before assuming
+any capability exists.
 
 ## Platform intent
 
@@ -87,7 +90,8 @@ BI, Docker, Terraform, GitHub Actions, and policy-as-code tooling.
 │   ├── reviewer/               # Generated reviewer briefing bundle/views (gitignored)
 │   ├── policy/                 # Generated policy/control catalog outputs (gitignored)
 │   ├── assurance/              # Generated assurance-history drift outputs (gitignored)
-│   └── assurance_pack/         # Generated integrated assurance review pack (gitignored)
+│   ├── assurance_pack/         # Generated integrated assurance review pack (gitignored)
+│   └── readiness/              # Generated reviewer readiness evidence (gitignored)
 ├── reports/
 │   └── architecture.md         # Full architecture write-up + diagram
 ├── docs/
@@ -102,12 +106,42 @@ BI, Docker, Terraform, GitHub Actions, and policy-as-code tooling.
 │   ├── generate_policy_catalog.py # Build policy/control catalog and traceability matrix
 │   ├── generate_assurance_history.py # Build assurance snapshots and drift report
 │   ├── generate_assurance_pack.py # Build integrated assurance review pack
+│   ├── generate_review_readiness.py # Build review-readiness checklist/report
 │   └── smoke_reviewer_demo.py  # Validate local reviewer demo readiness
 ├── tests/                      # Foundation + inventory + access + audit + compliance + reporting + reviewer
 └── .github/workflows/          # CI: install, lint, test, validate
 ```
 
 ## Implemented vs. Planned
+
+### Implemented (Milestone 12 — Reviewer Acceptance & Demo Readiness)
+
+- A typed immutable review-readiness layer in
+  `src/governance_platform/reviewer/readiness.py` for acceptance criteria, criterion results,
+  artifact completeness, demo-readiness evidence, and overall review-readiness classification
+- Deterministic acceptance categories covering architecture, inventory, access governance,
+  audit/evidence, compliance/risk, policy/control traceability, assurance history, reviewer
+  reporting, reviewer portal, documentation, reproducibility, and claim discipline
+- Semantic artifact completeness checks that load canonical generated outputs where loaders exist
+  and fail clearly when required upstream artifacts are missing
+- `scripts/generate_review_readiness.py`, which builds/exports `outputs/readiness/`, reloads the
+  canonical checklist/demo-readiness outputs, and validates expected files
+- `outputs/readiness/acceptance_checklist.json`, `acceptance_checklist.csv`,
+  `artifact_completeness.json`, `demo_readiness.json`, and `review_readiness_report.md` when the
+  generator is run
+- A blank reviewer walkthrough notes template at
+  `docs/demo/reviewer-walkthrough-template.md`; it is not a completed review, approval record,
+  sign-off, production acceptance, or certification
+- A read-only **Review Readiness** page in the local reviewer portal when `outputs/readiness/`
+  exists
+- pytest coverage for model validation, deterministic criterion ordering, demonstrated,
+  incomplete, not-applicable, and environment-blocked status handling, semantic loading,
+  readiness classification, missing artifacts, export/reload, deterministic outputs, portal
+  loading, walkthrough-template safeguards, and synthetic/local claim boundaries
+
+This layer demonstrates that local synthetic artifacts are available for review. It does not
+create human review, organisational approval, governance-board sign-off, production acceptance,
+or regulatory certification.
 
 ### Implemented (Milestone 11 — Integrated Assurance Review Pack)
 
@@ -460,6 +494,8 @@ automation, or any Snowflake connectivity (see [Explicit non-goals](#explicit-no
 - Published Power BI governance dashboards or `.pbix`/PBIP artifacts
 - Authentication, role-based application access, and production hosting for the local reviewer
   portal
+- Human reviewer sign-off, governance-board approval, production acceptance, or external
+  certification
 - Any live Terraform deployment or cloud provisioning
 - Generic policy DSL / OPA/Rego integration, live policy enforcement, automatic remediation,
   or production compliance orchestration
@@ -469,9 +505,9 @@ assumed to exist.
 
 ### Explicit non-goals
 
-Milestones 2–11 are metadata, inventory, local access-control, audit/evidence, compliance,
-reporting, reviewer-portal, reviewer-export, policy-catalog, assurance-history, and assurance-pack
-**simulations** only. They do not implement: Snowflake connectivity or deployed schemas, live
+Milestones 2–12 are metadata, inventory, local access-control, audit/evidence, compliance,
+reporting, reviewer-portal, reviewer-export, policy-catalog, assurance-history, assurance-pack,
+and review-readiness **simulations** only. They do not implement: Snowflake connectivity or deployed schemas, live
 Snowflake RBAC or user/role provisioning, Entra ID integration, authentication, real user accounts,
 cloud identity, live Snowflake query-history/audit-log ingestion, a real SIEM, Microsoft Purview
 integration, Entra ID audit-log ingestion, real-time streaming, production observability, an
@@ -479,8 +515,9 @@ incident-response engine, a generic policy-as-code engine, approval-workflow aut
 responsible-AI workflow automation, model approval automation, Fabric semantic models, Power BI
 dashboards, Terraform deployment, Salesforce workflows, regulatory certification, live monitoring,
 scheduled evaluation, alerting, production hosting, automatic remediation, production history
-databases, workflow execution, notifications, production compliance orchestration, or production
-access/audit/compliance enforcement of any kind. These
+databases, workflow execution, notifications, human review, organisational approval,
+governance-board approval, production acceptance, production compliance orchestration, or
+production access/audit/compliance enforcement of any kind. These
 remain [Planned](#planned-later-milestones--not-implemented-in-this-repository-yet) above.
 
 ## Getting started (local development)
@@ -524,7 +561,10 @@ python scripts/generate_assurance_history.py
 # Build integrated assurance review pack (Milestone 11):
 python scripts/generate_assurance_pack.py
 
-# Smoke-check local reviewer demo readiness (Milestone 8):
+# Build review-readiness checklist and demo evidence (Milestone 12):
+python scripts/generate_review_readiness.py
+
+# Smoke-check local reviewer demo readiness (Milestones 8–12):
 python scripts/smoke_reviewer_demo.py
 
 # Start the local reviewer portal (Milestone 7):
@@ -883,6 +923,9 @@ Implemented sections:
 - **Assurance Review Pack** — integrated pack summary, top priority findings, review-only
   actions, policy/control links, evidence references, and drift context when
   `outputs/assurance_pack/` has been generated.
+- **Review Readiness** — overall review-readiness status, demonstrated/incomplete criteria,
+  artifact completeness, evidence traceability availability, and environment limitations when
+  `outputs/readiness/` has been generated.
 
 The app fails clearly when required generated outputs are missing and tells the reviewer which
 generation commands to run. It has no write/edit workflows, approval actions, authentication,
@@ -913,10 +956,11 @@ identifiers only, such as `model:MD-0003`, `access_grant:AG-0001`, `audit_event:
 
 `python scripts/smoke_reviewer_demo.py` verifies local demo readiness without browser automation:
 required outputs exist, reviewer data loads, briefing and evidence-index helpers build, common
-drill-through paths work, Streamlit is importable, and the reviewer app can briefly start in
-headless mode before being stopped. If a restricted execution environment blocks local port
-binding, the smoke check reports that condition and validates the Streamlit dependency and
-entrypoint instead.
+drill-through paths work, policy/catalog, assurance-history, assurance-pack, and readiness outputs
+load, deterministic readiness export behavior holds, Streamlit is importable, and the reviewer app
+can briefly start in headless mode before being stopped. If a restricted execution environment
+blocks local port binding, the smoke check reports that condition and validates the Streamlit
+dependency and entrypoint instead.
 
 For a step-by-step reviewer walkthrough, see
 [`docs/demo/reviewer-demo-runbook.md`](docs/demo/reviewer-demo-runbook.md).
@@ -988,6 +1032,26 @@ from existing canonical outputs and APIs only. It does not introduce new control
 scoring, remediation, approval workflows, notifications, live monitoring, production
 observability, external integrations, or certification.
 
+## Reviewer acceptance and demo readiness outputs
+
+`python scripts/generate_review_readiness.py` writes deterministic review-readiness evidence to
+`outputs/readiness/` after the reviewer bundle, policy catalog, assurance history, and integrated
+assurance pack have been generated:
+
+```text
+outputs/readiness/acceptance_checklist.json    # canonical acceptance checklist
+outputs/readiness/acceptance_checklist.csv     # reviewer-readable criterion results
+outputs/readiness/artifact_completeness.json   # semantic artifact completeness evidence
+outputs/readiness/demo_readiness.json          # aggregate local demo-readiness result
+outputs/readiness/review_readiness_report.md   # concise reviewer-readable readiness report
+```
+
+The readiness classification is deterministic: `ready_for_review` requires all required criteria
+to be demonstrated, `ready_with_limitations` is used for environment-blocked but otherwise
+available review artifacts, and `not_ready` is used when required criteria are incomplete. This is
+review-readiness evidence only. It is not human review, organisational approval,
+governance-board sign-off, production acceptance, external certification, or deployment evidence.
+
 ## Architecture and design records
 
 - [`reports/architecture.md`](reports/architecture.md) — the seven-plane architecture and diagram
@@ -1013,6 +1077,9 @@ observability, external integrations, or certification.
   — the Milestone 10 assurance-history snapshot and drift comparison implementation
 - [`src/governance_platform/reviewer/assurance_pack.py`](src/governance_platform/reviewer/assurance_pack.py)
   — the Milestone 11 integrated assurance review pack implementation
+- [`src/governance_platform/reviewer/readiness.py`](src/governance_platform/reviewer/readiness.py)
+  and [`docs/demo/reviewer-walkthrough-template.md`](docs/demo/reviewer-walkthrough-template.md)
+  — the Milestone 12 reviewer acceptance and demo-readiness implementation
 - [`governance/`](governance/) — operating-model documentation per governance domain
 - [`infrastructure/snowflake/`](infrastructure/snowflake/) — intended Snowflake governance
   responsibilities (no live account)

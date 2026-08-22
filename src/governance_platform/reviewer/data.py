@@ -8,6 +8,7 @@ drill-through behavior can be tested without exercising UI internals.
 from __future__ import annotations
 
 import csv
+import json
 from collections import Counter
 from dataclasses import dataclass
 from datetime import date, datetime
@@ -102,6 +103,16 @@ class ReviewerAssurancePackState:
     evidence_map_rows: tuple[dict[str, Any], ...]
 
 
+@dataclass(frozen=True)
+class ReviewerReadinessState:
+    """Loaded review-readiness rows for the reviewer portal."""
+
+    checklist: Any
+    demo_readiness: Any
+    acceptance_result_rows: tuple[dict[str, Any], ...]
+    artifact_rows: tuple[dict[str, Any], ...]
+
+
 def _repo_root() -> Path:
     return Path(__file__).resolve().parents[3]
 
@@ -180,6 +191,25 @@ def missing_assurance_pack_output_paths(outputs_root: str | Path) -> tuple[Path,
     """Return missing integrated assurance pack files under ``outputs_root``."""
     return tuple(
         path for path in required_assurance_pack_output_paths(outputs_root) if not path.is_file()
+    )
+
+
+def required_readiness_output_paths(outputs_root: str | Path) -> tuple[Path, ...]:
+    """Canonical review-readiness files the optional portal page expects."""
+    root = Path(outputs_root)
+    return (
+        root / "readiness" / "acceptance_checklist.json",
+        root / "readiness" / "acceptance_checklist.csv",
+        root / "readiness" / "artifact_completeness.json",
+        root / "readiness" / "demo_readiness.json",
+        root / "readiness" / "review_readiness_report.md",
+    )
+
+
+def missing_readiness_output_paths(outputs_root: str | Path) -> tuple[Path, ...]:
+    """Return missing review-readiness files under ``outputs_root``."""
+    return tuple(
+        path for path in required_readiness_output_paths(outputs_root) if not path.is_file()
     )
 
 
@@ -365,6 +395,37 @@ def load_reviewer_assurance_pack_state(
         priority_finding_rows=priority_rows,
         reviewer_action_rows=action_rows,
         evidence_map_rows=evidence_rows,
+    )
+
+
+def load_reviewer_readiness_state(
+    outputs_root: str | Path | None = None,
+) -> ReviewerReadinessState:
+    """Load generated review-readiness outputs for the optional reviewer page."""
+    from governance_platform.reviewer.readiness import (
+        load_acceptance_checklist,
+        load_demo_readiness,
+    )
+
+    root = Path(outputs_root) if outputs_root is not None else default_outputs_root()
+    missing = missing_readiness_output_paths(root)
+    if missing:
+        raise MissingGeneratedOutputError(missing)
+
+    readiness_root = root / "readiness"
+    checklist = load_acceptance_checklist(readiness_root)
+    demo_readiness = load_demo_readiness(readiness_root)
+    with (readiness_root / "acceptance_checklist.csv").open(newline="", encoding="utf-8") as fh:
+        acceptance_rows = tuple(dict(row) for row in csv.DictReader(fh))
+    artifact_rows = tuple(
+        json.loads((readiness_root / "artifact_completeness.json").read_text(encoding="utf-8"))
+    )
+
+    return ReviewerReadinessState(
+        checklist=checklist,
+        demo_readiness=demo_readiness,
+        acceptance_result_rows=acceptance_rows,
+        artifact_rows=artifact_rows,
     )
 
 

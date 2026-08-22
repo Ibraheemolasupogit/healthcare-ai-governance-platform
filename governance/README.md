@@ -44,8 +44,11 @@ deterministic drift comparison over compliance/catalog outputs; it is not live m
 scheduling, alerting, remediation, or a production history store. As of Milestone 11,
 `src/governance_platform/reviewer/assurance_pack.py` aggregates briefing, catalog, evidence, and
 drift outputs into a concise review pack; it is reviewer handoff packaging, not workflow
-automation, notifications, remediation, or a new governance evaluation layer. See each document's
-"Current status" section for exactly what that does and does not cover.
+automation, notifications, remediation, or a new governance evaluation layer. As of Milestone 12,
+`src/governance_platform/reviewer/readiness.py` validates review-readiness criteria, artifact
+completeness, demo readiness, and claim boundaries for local synthetic review; it does not create
+human review, governance-board approval, production acceptance, or certification. See each
+document's "Current status" section for exactly what that does and does not cover.
 
 ## Domains
 

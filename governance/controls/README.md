@@ -121,6 +121,17 @@ and evidence, not a duplicate control catalog or a new evaluation engine.
 The review pack contains review recommendations only. It does not execute approvals,
 remediation, notifications, or workflow automation.
 
+## Review Readiness Linkage
+
+Milestone 12 uses the generated catalog, traceability matrix, assurance history, and integrated
+assurance pack when building `outputs/readiness/`. The readiness checklist validates that
+implemented controls are cataloged, policies map to controls, controls map to evidence, and
+reviewer-facing artifacts are available for inspection.
+
+Readiness means the local synthetic repository is available for external review. It does not mean
+the controls have been approved by a human reviewer, accepted for production, certified, or
+enforced in a live environment.
+
 ## Control Lifecycle
 
 Adding or changing a control should follow this sequence:
@@ -132,7 +143,8 @@ Adding or changing a control should follow this sequence:
 5. Run `python scripts/generate_policy_catalog.py`.
 6. Run `python scripts/generate_assurance_history.py`.
 7. Run `python scripts/generate_assurance_pack.py`.
-8. Run lint, tests, and repository validation.
+8. Run `python scripts/generate_review_readiness.py`.
+9. Run lint, tests, and repository validation.
 
 Catalog validation is expected to fail if implemented controls and catalog metadata drift apart.
 
