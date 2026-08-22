@@ -28,6 +28,7 @@ classifiers = [
 dependencies = [
     "pydantic>=2.6",
     "PyYAML>=6.0",
+    "streamlit>=1.37",
 ]
 
 [project.optional-dependencies]

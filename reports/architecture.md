@@ -1,11 +1,11 @@
 # Platform Architecture
 
 **Status:** Milestone 1 (Platform Foundation), Milestone 2 (Synthetic Research & AI Inventory),
-Milestone 3 (Access & Research Control Plane), Milestone 4 (Audit & Evidence Plane), and
-Milestone 5 (Risk & Compliance Monitoring Plane), and Milestone 6 (Governance Reporting &
-Semantic Plane). This document describes the target architecture for the full platform and marks,
-plane by plane, what exists today versus what is designed but not yet built. Nothing described as
-"Planned" should be treated as available.
+Milestone 3 (Access & Research Control Plane), Milestone 4 (Audit & Evidence Plane), Milestone 5
+(Risk & Compliance Monitoring Plane), Milestone 6 (Governance Reporting & Semantic Plane), and
+Milestone 7 (Local Governance Reviewer Portal). This document describes the target architecture
+for the full platform and marks, plane by plane, what exists today versus what is designed but not
+yet built. Nothing described as "Planned" should be treated as available.
 
 **Data statement:** the platform is designed to operate on synthetic data only. No real patient
 data, no production Snowflake account, no Fabric tenant, and no live cloud infrastructure exist
@@ -123,11 +123,15 @@ compliance officers, research leadership — via Fabric and Power BI.
   or tenant integration. `src/governance_platform/reporting/` provides typed immutable
   `GovernanceKPI` and `ReportingSnapshot` models; deterministic metric derivation over the
   inventory, access-control, audit/evidence, and compliance planes; source-reference validation;
-  JSON/CSV export; and a concise executive Markdown summary. The future Fabric semantic model and
-  dashboard designs are specified in
+  JSON/CSV export; and a concise executive Markdown summary. Milestone 7 adds
+  `src/governance_platform/reviewer_app.py` and `src/governance_platform/reviewer/`: a local
+  Streamlit reviewer portal with navigation, filters, restrained charts, tables, and
+  project/request/grant drill-through over the generated outputs. The future Fabric semantic
+  model and dashboard designs are specified in
   [`fabric/semantic_model/README.md`](../fabric/semantic_model/README.md) and
   [`fabric/dashboards/README.md`](../fabric/dashboards/README.md), but no Fabric workspace,
-  semantic model deployment, `.pbix` file, or Power BI dashboard exists.
+  semantic model deployment, `.pbix` file, Power BI dashboard, authentication, production hosting,
+  or live refresh exists.
 
 ### 7. Engineering / infrastructure plane
 
@@ -218,8 +222,10 @@ every other plane deploys onto — it doesn't produce governance data itself.
    governance posture; it is not a live monitoring service or certification engine.
 5. The **reporting plane** aggregates inventory, access, audit/evidence, compliance, and risk
    state into reporting-ready KPIs and reviewer/executive outputs. As of Milestone 6, this exists
-   locally in `src/governance_platform/reporting/` and `outputs/reporting/`; Fabric/Power BI
-   dashboards remain a future deployment concern.
+   locally in `src/governance_platform/reporting/` and `outputs/reporting/`. As of Milestone 7,
+   `src/governance_platform/reviewer_app.py` provides a local read-only reviewer portal over
+   those outputs; Fabric/Power BI dashboards, authentication, production hosting, and live refresh
+   remain future concerns.
 6. All of the above runs on infrastructure provisioned and operated by the **engineering /
    infrastructure plane** — currently a local Python package, a dev container, and CI; Snowflake
    and Fabric are documented intentions, not live systems.

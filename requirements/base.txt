@@ -4,3 +4,4 @@
 # or container base images) instead of pyproject extras.
 pydantic>=2.6
 PyYAML>=6.0
+streamlit>=1.37

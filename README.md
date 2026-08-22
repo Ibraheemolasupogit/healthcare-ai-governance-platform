@@ -16,7 +16,8 @@ and how all of it is reported to oversight stakeholders.
 The platform is being built in milestones. **This repository currently contains Milestone 1
 (Platform Foundation), Milestone 2 (Synthetic Research & AI Inventory), Milestone 3 (Access &
 Research Control Plane), Milestone 4 (Audit & Evidence Plane), Milestone 5 (Risk &
-Compliance Monitoring Plane), and Milestone 6 (Governance Reporting & Semantic Plane).**
+Compliance Monitoring Plane), Milestone 6 (Governance Reporting & Semantic Plane), and
+Milestone 7 (Local Governance Reviewer Portal).**
 Milestone 2 adds a typed, validated metadata/inventory plane and a deterministic synthetic
 dataset/model/research portfolio generated from it. Milestone 3 adds a **local governance
 simulation** of the access request → decision → grant → revocation/expiry workflow, evaluated
@@ -24,9 +25,10 @@ deterministically against that inventory. Milestone 4 adds an append-only audit 
 Milestones 2–3's activity and a deterministic, reviewer-readable evidence pack derived from it.
 Milestone 5 adds deterministic control evaluation, compliance findings, bounded risk indicators,
 and a governance posture over that same local state. Milestone 6 adds reporting-ready semantic
-contracts, deterministic governance KPIs, and an executive summary over existing outputs. No model
-approval automation, responsible AI workflow automation, live identity/RBAC/SIEM enforcement, or
-Fabric/Power BI deployment has been implemented yet. See
+contracts, deterministic governance KPIs, and an executive summary over existing outputs.
+Milestone 7 adds a local Streamlit reviewer portal over those generated outputs. No model
+approval automation, responsible AI workflow automation, live identity/RBAC/SIEM enforcement,
+authentication, production hosting, or Fabric/Power BI deployment has been implemented yet. See
 [Implemented vs. Planned](#implemented-vs-planned) below before assuming any capability exists.
 
 ## Platform intent
@@ -56,7 +58,9 @@ BI, Docker, Terraform, GitHub Actions, and policy-as-code tooling.
 │   ├── access/                 # Access/research-control plane: request/decision/grant simulation
 │   ├── audit/                  # Audit/evidence plane: append-only log + evidence-pack generation
 │   ├── compliance/             # Risk/compliance plane: controls, findings, posture outputs
-│   └── reporting/              # Reporting plane: deterministic KPIs and snapshots
+│   ├── reporting/              # Reporting plane: deterministic KPIs and snapshots
+│   ├── reviewer/               # Reviewer portal data-loading/filter/drill-through helpers
+│   └── reviewer_app.py         # Local Streamlit reviewer portal
 ├── governance/                 # Governance operating-model documentation
 ├── infrastructure/
 │   ├── docker/                 # Minimal local development container
@@ -82,11 +86,44 @@ BI, Docker, Terraform, GitHub Actions, and policy-as-code tooling.
 │   ├── generate_evidence.py    # Build the audit log/evidence pack from the above
 │   ├── generate_compliance.py  # Evaluate controls and export compliance posture
 │   └── generate_reporting.py   # Build reporting KPIs and executive summary
-├── tests/                      # Foundation + inventory + access + audit + compliance + reporting
+├── tests/                      # Foundation + inventory + access + audit + compliance + reporting + reviewer
 └── .github/workflows/          # CI: install, lint, test, validate
 ```
 
 ## Implemented vs. Planned
+
+### Implemented (Milestone 7 — Local Governance Reviewer Portal)
+
+- A local reviewer-facing Streamlit app (`src/governance_platform/reviewer_app.py`) over the
+  generated synthetic governance outputs — not a production web app, hosted service, Fabric
+  report, Power BI dashboard, or authenticated application
+- A clean UI data-access layer (`src/governance_platform/reviewer/`) that loads canonical outputs
+  through existing loaders (`outputs/inventory`, `outputs/access`, `outputs/evidence`,
+  `outputs/compliance`, `outputs/reporting`) and prepares deterministic reviewer-friendly rows;
+  it does not hard-code or duplicate governance source state
+- Five read-only reviewer sections: Executive Governance Overview, Data & Model Governance,
+  Research & Access Governance, Audit & Evidence, and Compliance & Risk
+- Deterministic KPI views, restrained built-in Streamlit charts, readable tables, source/evidence
+  identifiers, useful empty states, and filters/search for dataset/model/project/access/audit/
+  control/risk review
+- Drill-through helpers by research project, request, grant, and evidence reference, linking
+  related requests, decisions, grants, audit events, control results, risk indicators, and
+  source records
+- Clear missing-output handling: if generated artifacts are absent, the portal reports the
+  missing files and lists the generation commands to run
+- pytest coverage for portal data loading, source-output validation, filtering helpers, KPI
+  lookup, drill-through selection, status aggregation, missing-output handling, stable sorting,
+  and synthetic-data safeguards
+
+Run locally after generating outputs:
+
+```bash
+streamlit run src/governance_platform/reviewer_app.py
+```
+
+This portal is a local portfolio/demo interface only. It has no editing or approval workflows,
+authentication, role-based application access, production hosting, live refresh, alerting, or
+regulatory certification.
 
 ### Implemented (Milestone 6 — Governance Reporting & Semantic Plane)
 
@@ -288,6 +325,8 @@ automation, or any Snowflake connectivity (see [Explicit non-goals](#explicit-no
 - A model approval / responsible-AI review workflow with automated checks
 - Deployed Fabric semantic model and live semantic-model refresh
 - Published Power BI governance dashboards or `.pbix`/PBIP artifacts
+- Authentication, role-based application access, and production hosting for the local reviewer
+  portal
 - Any live Terraform deployment or cloud provisioning
 
 Do not treat anything in this list as available — it is documented here precisely so it isn't
@@ -295,15 +334,15 @@ assumed to exist.
 
 ### Explicit non-goals
 
-Milestones 2–6 are metadata, inventory, local access-control, audit/evidence, compliance, and
-reporting **simulations** only. They do not implement: Snowflake connectivity or deployed schemas, live
+Milestones 2–7 are metadata, inventory, local access-control, audit/evidence, compliance,
+reporting, and reviewer-portal **simulations** only. They do not implement: Snowflake connectivity or deployed schemas, live
 Snowflake RBAC or user/role provisioning, Entra ID integration, authentication, real user accounts,
 cloud identity, live Snowflake query-history/audit-log ingestion, a real SIEM, Microsoft Purview
 integration, Entra ID audit-log ingestion, real-time streaming, production observability, an
 incident-response engine, a generic policy-as-code engine, approval-workflow automation,
 responsible-AI workflow automation, model approval automation, Fabric semantic models, Power BI
 dashboards, Terraform deployment, Salesforce workflows, regulatory certification, live monitoring,
-alerting, or production access/audit/compliance enforcement of any kind. These
+alerting, production hosting, or production access/audit/compliance enforcement of any kind. These
 remain [Planned](#planned-later-milestones--not-implemented-in-this-repository-yet) above.
 
 ## Getting started (local development)
@@ -334,6 +373,9 @@ python scripts/generate_compliance.py
 
 # Build reporting KPIs, snapshot, and executive summary (Milestone 6):
 python scripts/generate_reporting.py
+
+# Start the local reviewer portal (Milestone 7):
+streamlit run src/governance_platform/reviewer_app.py
 ```
 
 ### Using Docker instead
@@ -655,6 +697,36 @@ findings by domain/severity, risk indicator counts, bounded risk score, and over
 posture. Every KPI has source references back to the local source artifact(s). This is not a
 deployed Fabric semantic model, Power BI report, live refresh, or tenant integration.
 
+## Local reviewer portal
+
+`streamlit run src/governance_platform/reviewer_app.py` starts a local read-only reviewer portal
+over the generated outputs. Generate the deterministic state first with the five scripts above.
+
+The portal reads canonical files rather than rebuilding governance logic:
+
+```text
+Governance Source State -> Existing Reporting Snapshot -> Reviewer Portal
+-> Navigation / Filtering / Drill-through -> Governance Review Experience
+```
+
+Implemented sections:
+
+- **Executive Governance Overview** — posture, bounded risk score, control pass/warning/failure
+  metrics, inventory totals, access totals, grant status, and audit/evidence completeness.
+- **Data & Model Governance** — dataset and model inventory review with filters for approval,
+  sensitivity, research-use eligibility, risk tier, and model approval state.
+- **Research & Access Governance** — research projects, access requests, decisions, grants,
+  rejection reasons, and drill-through by project/request/grant.
+- **Audit & Evidence** — audit-event timeline with filters for event type, outcome, project,
+  request, and grant, plus evidence-pack completeness summary.
+- **Compliance & Risk** — controls, pass rate, findings by severity/domain, risk indicators,
+  bounded risk score, posture, and evidence-reference drill-through.
+
+The app fails clearly when required generated outputs are missing and tells the reviewer which
+generation commands to run. It has no write/edit workflows, approval actions, authentication,
+role-based app access, production hosting, Power BI/Fabric deployment, live refresh, alerting, or
+regulatory certification.
+
 ## Architecture and design records
 
 - [`reports/architecture.md`](reports/architecture.md) — the seven-plane architecture and diagram
@@ -670,6 +742,9 @@ deployed Fabric semantic model, Power BI report, live refresh, or tenant integra
   risk/compliance monitoring plane implementation
 - [`src/governance_platform/reporting/`](src/governance_platform/reporting/) — the Milestone 6
   reporting and semantic snapshot implementation
+- [`src/governance_platform/reviewer/`](src/governance_platform/reviewer/) and
+  [`src/governance_platform/reviewer_app.py`](src/governance_platform/reviewer_app.py) — the
+  Milestone 7 local reviewer portal
 - [`governance/`](governance/) — operating-model documentation per governance domain
 - [`infrastructure/snowflake/`](infrastructure/snowflake/) — intended Snowflake governance
   responsibilities (no live account)
