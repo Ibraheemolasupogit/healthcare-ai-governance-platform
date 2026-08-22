@@ -41,3 +41,11 @@ As of Milestone 6, `reporting/` is populated by running
 KPI rows, a canonical reporting snapshot, and a concise executive summary. This is local reporting
 over synthetic state only — not a deployed Fabric semantic model, Power BI report, live refresh,
 or tenant integration.
+
+As of Milestone 8, `reviewer/` is populated by running
+`python scripts/generate_reviewer_bundle.py` (see the root
+[README's Reviewer export and demo handoff section](../README.md#reviewer-export-and-demo-handoff)):
+a deterministic reviewer briefing, reviewer KPI/findings exports, a reviewer-friendly evidence
+index, and compact saved reviewer views. This is local reviewer handoff packaging over generated
+synthetic outputs only — not production hosting, authentication, Power BI/Fabric deployment, live
+tenant integration, monitoring, alerting, or regulatory certification.

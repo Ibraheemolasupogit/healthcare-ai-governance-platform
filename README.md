@@ -16,8 +16,8 @@ and how all of it is reported to oversight stakeholders.
 The platform is being built in milestones. **This repository currently contains Milestone 1
 (Platform Foundation), Milestone 2 (Synthetic Research & AI Inventory), Milestone 3 (Access &
 Research Control Plane), Milestone 4 (Audit & Evidence Plane), Milestone 5 (Risk &
-Compliance Monitoring Plane), Milestone 6 (Governance Reporting & Semantic Plane), and
-Milestone 7 (Local Governance Reviewer Portal).**
+Compliance Monitoring Plane), Milestone 6 (Governance Reporting & Semantic Plane), Milestone 7
+(Local Governance Reviewer Portal), and Milestone 8 (Reviewer Export & Demo Handoff).**
 Milestone 2 adds a typed, validated metadata/inventory plane and a deterministic synthetic
 dataset/model/research portfolio generated from it. Milestone 3 adds a **local governance
 simulation** of the access request → decision → grant → revocation/expiry workflow, evaluated
@@ -26,10 +26,12 @@ Milestones 2–3's activity and a deterministic, reviewer-readable evidence pack
 Milestone 5 adds deterministic control evaluation, compliance findings, bounded risk indicators,
 and a governance posture over that same local state. Milestone 6 adds reporting-ready semantic
 contracts, deterministic governance KPIs, and an executive summary over existing outputs.
-Milestone 7 adds a local Streamlit reviewer portal over those generated outputs. No model
-approval automation, responsible AI workflow automation, live identity/RBAC/SIEM enforcement,
-authentication, production hosting, or Fabric/Power BI deployment has been implemented yet. See
-[Implemented vs. Planned](#implemented-vs-planned) below before assuming any capability exists.
+Milestone 7 adds a local Streamlit reviewer portal over those generated outputs. Milestone 8 adds
+deterministic reviewer briefing exports, saved reviewer views, an evidence index, and a local demo
+runbook/smoke check. No model approval automation, responsible AI workflow automation, live
+identity/RBAC/SIEM enforcement, authentication, production hosting, or Fabric/Power BI deployment
+has been implemented yet. See [Implemented vs. Planned](#implemented-vs-planned) below before
+assuming any capability exists.
 
 ## Platform intent
 
@@ -59,7 +61,7 @@ BI, Docker, Terraform, GitHub Actions, and policy-as-code tooling.
 │   ├── audit/                  # Audit/evidence plane: append-only log + evidence-pack generation
 │   ├── compliance/             # Risk/compliance plane: controls, findings, posture outputs
 │   ├── reporting/              # Reporting plane: deterministic KPIs and snapshots
-│   ├── reviewer/               # Reviewer portal data-loading/filter/drill-through helpers
+│   ├── reviewer/               # Reviewer portal + export/filter/drill-through helpers
 │   └── reviewer_app.py         # Local Streamlit reviewer portal
 ├── governance/                 # Governance operating-model documentation
 ├── infrastructure/
@@ -75,7 +77,8 @@ BI, Docker, Terraform, GitHub Actions, and policy-as-code tooling.
 │   ├── access/                 # Generated access requests/decisions/grants (gitignored)
 │   ├── evidence/               # Generated audit log + evidence pack (gitignored)
 │   ├── compliance/             # Generated control/risk/posture outputs (gitignored)
-│   └── reporting/              # Generated reporting KPIs/snapshot (gitignored)
+│   ├── reporting/              # Generated reporting KPIs/snapshot (gitignored)
+│   └── reviewer/               # Generated reviewer briefing bundle/views (gitignored)
 ├── reports/
 │   └── architecture.md         # Full architecture write-up + diagram
 ├── docs/
@@ -85,12 +88,42 @@ BI, Docker, Terraform, GitHub Actions, and policy-as-code tooling.
 │   ├── generate_access.py      # Generate/evaluate/validate/export the access-control state
 │   ├── generate_evidence.py    # Build the audit log/evidence pack from the above
 │   ├── generate_compliance.py  # Evaluate controls and export compliance posture
-│   └── generate_reporting.py   # Build reporting KPIs and executive summary
+│   ├── generate_reporting.py   # Build reporting KPIs and executive summary
+│   ├── generate_reviewer_bundle.py # Build reviewer briefing bundle/views
+│   └── smoke_reviewer_demo.py  # Validate local reviewer demo readiness
 ├── tests/                      # Foundation + inventory + access + audit + compliance + reporting + reviewer
 └── .github/workflows/          # CI: install, lint, test, validate
 ```
 
 ## Implemented vs. Planned
+
+### Implemented (Milestone 8 — Reviewer Export & Demo Handoff)
+
+- Deterministic reviewer handoff exports in `src/governance_platform/reviewer/exports.py`, built
+  from existing generated outputs and reviewer data helpers rather than re-running or duplicating
+  governance business logic
+- `scripts/generate_reviewer_bundle.py`, which loads canonical outputs, validates evidence
+  references, writes `outputs/reviewer/`, reloads the canonical briefing, and validates expected
+  files
+- A concise reviewer briefing bundle: `reviewer_briefing.json`, `reviewer_briefing.md`,
+  `reviewer_kpis.csv`, `reviewer_findings.csv`, `reviewer_evidence_index.csv`,
+  `reviewer_filtered_views.csv`, and `reviewer_filtered_views.md`
+- Saved deterministic reviewer views for high-risk models, pending/rejected research projects,
+  rejected access requests, revoked/expired grants, warning/failed controls, high-severity risk
+  indicators, audit events for `RP-0001`, and evidence references for `CR-0034`
+- A reviewer-friendly evidence index mapping supported identifiers to source planes, entity types,
+  descriptions, and canonical source files
+- `scripts/smoke_reviewer_demo.py`, which verifies generated outputs, reviewer loading,
+  briefing/export helper construction, drill-through behavior, Streamlit dependency availability,
+  and a brief headless app startup without leaving a server running
+- A demo runbook at `docs/demo/reviewer-demo-runbook.md` for external reviewer handoff
+- pytest coverage for briefing validation, deterministic generation, filtered views, evidence
+  index integrity, stable ordering, export/reload, missing-output behavior, smoke helper behavior,
+  and synthetic-data safeguards
+
+This handoff layer is local, reproducible, read-only, and synthetic-data-only. It does not provide
+production hosting, authentication, write/edit workflows, approvals, live tenant integration,
+Power BI/Fabric deployment, enterprise monitoring, alerting, or regulatory certification.
 
 ### Implemented (Milestone 7 — Local Governance Reviewer Portal)
 
@@ -373,6 +406,12 @@ python scripts/generate_compliance.py
 
 # Build reporting KPIs, snapshot, and executive summary (Milestone 6):
 python scripts/generate_reporting.py
+
+# Build reviewer briefing bundle, evidence index, and saved views (Milestone 8):
+python scripts/generate_reviewer_bundle.py
+
+# Smoke-check local reviewer demo readiness (Milestone 8):
+python scripts/smoke_reviewer_demo.py
 
 # Start the local reviewer portal (Milestone 7):
 streamlit run src/governance_platform/reviewer_app.py
@@ -727,6 +766,38 @@ generation commands to run. It has no write/edit workflows, approval actions, au
 role-based app access, production hosting, Power BI/Fabric deployment, live refresh, alerting, or
 regulatory certification.
 
+## Reviewer export and demo handoff
+
+`python scripts/generate_reviewer_bundle.py` writes a deterministic reviewer handoff bundle to
+`outputs/reviewer/` after the inventory, access, evidence, compliance, and reporting outputs have
+been generated:
+
+```text
+outputs/reviewer/reviewer_briefing.json        # canonical briefing model
+outputs/reviewer/reviewer_briefing.md          # concise reviewer-readable briefing
+outputs/reviewer/reviewer_kpis.csv             # reporting KPI export for reviewers
+outputs/reviewer/reviewer_findings.csv         # warning/failure controls + risk indicators
+outputs/reviewer/reviewer_evidence_index.csv   # evidence refs mapped to source files/entities
+outputs/reviewer/reviewer_filtered_views.csv   # compact saved reviewer views
+outputs/reviewer/reviewer_filtered_views.md    # Markdown rendering of saved views
+```
+
+The saved views cover high-risk models, pending/rejected research projects, rejected access
+requests, revoked/expired grants, warning/failed controls, high-severity risk indicators, audit
+events for `RP-0001`, and evidence references for `CR-0034`. The evidence index uses existing
+identifiers only, such as `model:MD-0003`, `access_grant:AG-0001`, `audit_event:AE-0033`, and
+`evidence_pack:EVP-0001`; unsupported evidence is not invented.
+
+`python scripts/smoke_reviewer_demo.py` verifies local demo readiness without browser automation:
+required outputs exist, reviewer data loads, briefing and evidence-index helpers build, common
+drill-through paths work, Streamlit is importable, and the reviewer app can briefly start in
+headless mode before being stopped. If a restricted execution environment blocks local port
+binding, the smoke check reports that condition and validates the Streamlit dependency and
+entrypoint instead.
+
+For a step-by-step reviewer walkthrough, see
+[`docs/demo/reviewer-demo-runbook.md`](docs/demo/reviewer-demo-runbook.md).
+
 ## Architecture and design records
 
 - [`reports/architecture.md`](reports/architecture.md) — the seven-plane architecture and diagram
@@ -744,7 +815,7 @@ regulatory certification.
   reporting and semantic snapshot implementation
 - [`src/governance_platform/reviewer/`](src/governance_platform/reviewer/) and
   [`src/governance_platform/reviewer_app.py`](src/governance_platform/reviewer_app.py) — the
-  Milestone 7 local reviewer portal
+  Milestone 7 local reviewer portal and Milestone 8 reviewer handoff exports
 - [`governance/`](governance/) — operating-model documentation per governance domain
 - [`infrastructure/snowflake/`](infrastructure/snowflake/) — intended Snowflake governance
   responsibilities (no live account)

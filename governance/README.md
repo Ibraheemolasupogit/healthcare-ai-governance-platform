@@ -29,8 +29,14 @@ monitoring — in [`src/governance_platform/compliance/`](../src/governance_plat
 As of Milestone 6, the implemented reporting plane in
 [`src/governance_platform/reporting/`](../src/governance_platform/reporting/) derives governance
 KPIs and executive summaries from those local outputs; the Fabric/Power BI files remain future
-architecture specifications, not deployed artifacts. See each document's "Current status" section
-for exactly what that does and does not cover.
+architecture specifications, not deployed artifacts. As of Milestone 7, the local reviewer portal
+in [`src/governance_platform/reviewer_app.py`](../src/governance_platform/reviewer_app.py) provides
+read-only review pages over generated outputs. As of Milestone 8,
+[`src/governance_platform/reviewer/`](../src/governance_platform/reviewer/) also provides
+deterministic reviewer briefing exports, saved reviewer views, an evidence index, and demo smoke
+checks. These are local handoff artifacts only, not production workflow automation or regulatory
+certification. See each document's "Current status" section for exactly what that does and does
+not cover.
 
 ## Domains
 
