@@ -18,7 +18,8 @@ The platform is being built in milestones. **This repository currently contains 
 Research Control Plane), Milestone 4 (Audit & Evidence Plane), Milestone 5 (Risk &
 Compliance Monitoring Plane), Milestone 6 (Governance Reporting & Semantic Plane), Milestone 7
 (Local Governance Reviewer Portal), Milestone 8 (Reviewer Export & Demo Handoff), Milestone 9
-(Policy & Control Catalog), and Milestone 10 (Control Assurance History & Drift).**
+(Policy & Control Catalog), Milestone 10 (Control Assurance History & Drift), and Milestone 11
+(Integrated Assurance Review Pack).**
 Milestone 2 adds a typed, validated metadata/inventory plane and a deterministic synthetic
 dataset/model/research portfolio generated from it. Milestone 3 adds a **local governance
 simulation** of the access request → decision → grant → revocation/expiry workflow, evaluated
@@ -31,11 +32,12 @@ Milestone 7 adds a local Streamlit reviewer portal over those generated outputs.
 deterministic reviewer briefing exports, saved reviewer views, an evidence index, and a local demo
 runbook/smoke check. Milestone 9 adds a deterministic policy/control catalog and
 control-to-evidence traceability matrix over the implemented controls. Milestone 10 adds explicit
-local assurance snapshots and deterministic control/risk/posture drift reporting. No model
-approval automation, responsible AI workflow automation, live identity/RBAC/SIEM enforcement,
-authentication, production hosting, scheduling, alerting, remediation, or Fabric/Power BI
-deployment has been implemented yet. See [Implemented vs. Planned](#implemented-vs-planned)
-below before assuming any capability exists.
+local assurance snapshots and deterministic control/risk/posture drift reporting. Milestone 11
+adds a concise integrated assurance review pack that cross-links briefing, policy/control,
+evidence, and drift outputs for reviewer handoff. No model approval automation, responsible AI
+workflow automation, live identity/RBAC/SIEM enforcement, authentication, production hosting,
+scheduling, alerting, remediation, or Fabric/Power BI deployment has been implemented yet. See
+[Implemented vs. Planned](#implemented-vs-planned) below before assuming any capability exists.
 
 ## Platform intent
 
@@ -84,7 +86,8 @@ BI, Docker, Terraform, GitHub Actions, and policy-as-code tooling.
 │   ├── reporting/              # Generated reporting KPIs/snapshot (gitignored)
 │   ├── reviewer/               # Generated reviewer briefing bundle/views (gitignored)
 │   ├── policy/                 # Generated policy/control catalog outputs (gitignored)
-│   └── assurance/              # Generated assurance-history drift outputs (gitignored)
+│   ├── assurance/              # Generated assurance-history drift outputs (gitignored)
+│   └── assurance_pack/         # Generated integrated assurance review pack (gitignored)
 ├── reports/
 │   └── architecture.md         # Full architecture write-up + diagram
 ├── docs/
@@ -98,12 +101,42 @@ BI, Docker, Terraform, GitHub Actions, and policy-as-code tooling.
 │   ├── generate_reviewer_bundle.py # Build reviewer briefing bundle/views
 │   ├── generate_policy_catalog.py # Build policy/control catalog and traceability matrix
 │   ├── generate_assurance_history.py # Build assurance snapshots and drift report
+│   ├── generate_assurance_pack.py # Build integrated assurance review pack
 │   └── smoke_reviewer_demo.py  # Validate local reviewer demo readiness
 ├── tests/                      # Foundation + inventory + access + audit + compliance + reporting + reviewer
 └── .github/workflows/          # CI: install, lint, test, validate
 ```
 
 ## Implemented vs. Planned
+
+### Implemented (Milestone 11 — Integrated Assurance Review Pack)
+
+- A typed immutable integrated review-pack layer in
+  `src/governance_platform/reviewer/assurance_pack.py` that aggregates existing briefing,
+  evidence-index, policy/control catalog, and assurance-history outputs without re-evaluating
+  controls, re-scoring risk, generating evidence, or recalculating drift
+- `AssuranceReviewPack`, `PriorityFinding`, and `ReviewerAction` models with explicit
+  synthetic/local/non-production claim boundaries
+- Deterministic priority findings ordered by current severity/status and drift context, including
+  the current `CTRL-0014` model-readiness warning, the linked bounded risk indicator, and the
+  Milestone 10 controlled `CTRL-0005` new-warning drift
+- Cross-linked policy/control/evidence/drift references in `assurance_evidence_map.csv`, using
+  existing evidence identifiers only
+- Review-only next steps for inspecting evidence, related controls, responsible-AI readiness, and
+  assurance drift; no remediation or workflow execution
+- `scripts/generate_assurance_pack.py`, which fails clearly when upstream generated outputs are
+  missing, builds/exports `outputs/assurance_pack/`, reloads the canonical pack, and validates
+  expected files
+- A read-only **Assurance Review Pack** page in the local reviewer portal when
+  `outputs/assurance_pack/` exists
+- pytest coverage for model validation, deterministic priority ordering, policy/control/evidence
+  linkage, drift linkage, reviewer actions, stable ordering, missing-source handling,
+  export/reload, deterministic output generation, portal loading, and synthetic/local safeguards
+
+This pack is a reviewer handoff artifact over local synthetic outputs. It is not new control
+logic, new risk scoring, automatic remediation, approval workflow automation, notifications, live
+monitoring, production observability, external governance integration, or regulatory
+certification.
 
 ### Implemented (Milestone 10 — Control Assurance History & Drift)
 
@@ -436,8 +469,8 @@ assumed to exist.
 
 ### Explicit non-goals
 
-Milestones 2–10 are metadata, inventory, local access-control, audit/evidence, compliance,
-reporting, reviewer-portal, reviewer-export, policy-catalog, and assurance-history
+Milestones 2–11 are metadata, inventory, local access-control, audit/evidence, compliance,
+reporting, reviewer-portal, reviewer-export, policy-catalog, assurance-history, and assurance-pack
 **simulations** only. They do not implement: Snowflake connectivity or deployed schemas, live
 Snowflake RBAC or user/role provisioning, Entra ID integration, authentication, real user accounts,
 cloud identity, live Snowflake query-history/audit-log ingestion, a real SIEM, Microsoft Purview
@@ -446,8 +479,8 @@ incident-response engine, a generic policy-as-code engine, approval-workflow aut
 responsible-AI workflow automation, model approval automation, Fabric semantic models, Power BI
 dashboards, Terraform deployment, Salesforce workflows, regulatory certification, live monitoring,
 scheduled evaluation, alerting, production hosting, automatic remediation, production history
-databases, production compliance orchestration, or production access/audit/compliance enforcement
-of any kind. These
+databases, workflow execution, notifications, production compliance orchestration, or production
+access/audit/compliance enforcement of any kind. These
 remain [Planned](#planned-later-milestones--not-implemented-in-this-repository-yet) above.
 
 ## Getting started (local development)
@@ -487,6 +520,9 @@ python scripts/generate_policy_catalog.py
 
 # Build assurance snapshots and drift report (Milestone 10):
 python scripts/generate_assurance_history.py
+
+# Build integrated assurance review pack (Milestone 11):
+python scripts/generate_assurance_pack.py
 
 # Smoke-check local reviewer demo readiness (Milestone 8):
 python scripts/smoke_reviewer_demo.py
@@ -844,6 +880,9 @@ Implemented sections:
 - **Assurance History / Drift** — generated baseline/comparison snapshots, risk-score delta,
   changed controls, risk drift, changed policy domains, and evidence references when
   `outputs/assurance/` has been generated.
+- **Assurance Review Pack** — integrated pack summary, top priority findings, review-only
+  actions, policy/control links, evidence references, and drift context when
+  `outputs/assurance_pack/` has been generated.
 
 The app fails clearly when required generated outputs are missing and tells the reviewer which
 generation commands to run. It has no write/edit workflows, approval actions, authentication,
@@ -929,6 +968,26 @@ This is explicit local historical comparison only. It is not real-time monitorin
 evaluation, alerting, automatic remediation, production observability, a production history store,
 or regulatory certification.
 
+## Integrated assurance review pack outputs
+
+`python scripts/generate_assurance_pack.py` writes a concise reviewer-ready assurance package to
+`outputs/assurance_pack/` after reviewer, policy, and assurance-history outputs have been
+generated:
+
+```text
+outputs/assurance_pack/assurance_review_pack.json   # canonical integrated pack
+outputs/assurance_pack/priority_findings.csv        # prioritized findings with policy/control links
+outputs/assurance_pack/reviewer_actions.csv         # review-only next steps
+outputs/assurance_pack/assurance_evidence_map.csv   # finding/control/policy/evidence/drift map
+outputs/assurance_pack/assurance_review_pack.md     # concise reviewer-readable pack
+```
+
+The pack cross-links current governance posture, selected metrics, current findings, risk
+indicators, policy/control catalog metadata, evidence references, and assurance drift. It derives
+from existing canonical outputs and APIs only. It does not introduce new controls, new risk
+scoring, remediation, approval workflows, notifications, live monitoring, production
+observability, external integrations, or certification.
+
 ## Architecture and design records
 
 - [`reports/architecture.md`](reports/architecture.md) — the seven-plane architecture and diagram
@@ -952,6 +1011,8 @@ or regulatory certification.
   traceability documentation
 - [`src/governance_platform/compliance/assurance.py`](src/governance_platform/compliance/assurance.py)
   — the Milestone 10 assurance-history snapshot and drift comparison implementation
+- [`src/governance_platform/reviewer/assurance_pack.py`](src/governance_platform/reviewer/assurance_pack.py)
+  — the Milestone 11 integrated assurance review pack implementation
 - [`governance/`](governance/) — operating-model documentation per governance domain
 - [`infrastructure/snowflake/`](infrastructure/snowflake/) — intended Snowflake governance
   responsibilities (no live account)

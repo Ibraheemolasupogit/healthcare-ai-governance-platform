@@ -66,3 +66,12 @@ drift, summary metrics, and a reviewer-readable change report. This is local his
 comparison over synthetic snapshots only — not real-time monitoring, scheduling, alerting,
 automatic remediation, production observability, a production history store, or regulatory
 certification.
+
+As of Milestone 11, `assurance_pack/` is populated by running
+`python scripts/generate_assurance_pack.py` (see the root
+[README's Integrated assurance review pack outputs section](../README.md#integrated-assurance-review-pack-outputs)):
+a concise integrated assurance review pack, priority findings, reviewer actions, and a compact
+finding/control/policy/evidence/drift map. This is reviewer handoff packaging over generated
+synthetic outputs only — not new control logic, new risk scoring, workflow automation,
+notifications, remediation, production observability, external governance integration, or
+regulatory certification.

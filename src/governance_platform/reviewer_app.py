@@ -31,10 +31,12 @@ from governance_platform.reviewer import (  # noqa: E402
     filter_rows,
     kpi_prefix_rows,
     kpi_value,
+    load_reviewer_assurance_pack_state,
     load_reviewer_assurance_state,
     load_reviewer_policy_state,
     load_reviewer_state,
     missing_assurance_output_paths,
+    missing_assurance_pack_output_paths,
     missing_policy_output_paths,
     rejection_reason_rows,
     status_counts,
@@ -503,6 +505,67 @@ def _assurance_history_page() -> None:
     )
 
 
+def _assurance_review_pack_page() -> None:
+    st.header("Assurance Review Pack")
+    missing = missing_assurance_pack_output_paths("outputs")
+    if missing:
+        st.info("Integrated assurance review pack outputs have not been generated yet.")
+        st.code("python3 scripts/generate_assurance_pack.py", language="text")
+        _table(
+            tuple({"missing_path": str(path)} for path in missing),
+            empty="No missing assurance pack outputs.",
+        )
+        return
+
+    pack_state = load_reviewer_assurance_pack_state()
+    pack = pack_state.pack
+    _metric_grid(
+        (
+            ("Posture", pack.governance_posture),
+            ("Bounded risk score", pack.bounded_risk_score),
+            ("Priority findings", len(pack.priority_findings)),
+            ("Reviewer actions", len(pack.reviewer_actions)),
+            ("Evidence refs", len(pack.evidence_index)),
+            ("Risk delta", pack.assurance_drift_summary.get("risk_score_delta", 0)),
+            ("Control drifts", pack.assurance_drift_summary.get("control_drift_count", 0)),
+            ("Pack", pack.pack_id),
+        )
+    )
+
+    st.subheader("Priority Findings")
+    severity = _select_filter(
+        "Finding severity", unique_values(pack_state.priority_finding_rows, "severity")
+    )
+    status = _select_filter(
+        "Finding status", unique_values(pack_state.priority_finding_rows, "status")
+    )
+    finding_rows = filter_rows(
+        pack_state.priority_finding_rows,
+        equals={"severity": severity, "status": status},
+    )
+    _table(finding_rows, empty="No priority findings match the selected filters.")
+
+    st.subheader("Reviewer Actions")
+    priority = _select_filter(
+        "Action priority", unique_values(pack_state.reviewer_action_rows, "priority")
+    )
+    action_rows = filter_rows(pack_state.reviewer_action_rows, equals={"priority": priority})
+    _table(action_rows, empty="No reviewer actions match the selected filters.")
+
+    st.subheader("Evidence Map")
+    control_id = _select_filter(
+        "Control ID", unique_values(pack_state.evidence_map_rows, "control_id")
+    )
+    policy_id = _select_filter(
+        "Policy ID", unique_values(pack_state.evidence_map_rows, "policy_id")
+    )
+    evidence_rows = filter_rows(
+        pack_state.evidence_map_rows,
+        equals={"control_id": control_id, "policy_id": policy_id},
+    )
+    _table(evidence_rows, empty="No evidence-map rows match the selected filters.")
+
+
 def main() -> None:
     st.set_page_config(page_title="Governance Reviewer Portal", layout="wide")
     st.title("Governance Reviewer Portal")
@@ -525,6 +588,7 @@ def main() -> None:
             "Compliance & Risk",
             "Policy & Controls",
             "Assurance History / Drift",
+            "Assurance Review Pack",
         ),
     )
 
@@ -540,8 +604,10 @@ def main() -> None:
         _compliance_risk_page(state)
     elif page == "Policy & Controls":
         _policy_controls_page()
-    else:
+    elif page == "Assurance History / Drift":
         _assurance_history_page()
+    else:
+        _assurance_review_pack_page()
 
 
 if __name__ == "__main__":

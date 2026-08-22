@@ -4,8 +4,8 @@
 Milestone 3 (Access & Research Control Plane), Milestone 4 (Audit & Evidence Plane), Milestone 5
 (Risk & Compliance Monitoring Plane), Milestone 6 (Governance Reporting & Semantic Plane),
 Milestone 7 (Local Governance Reviewer Portal), Milestone 8 (Reviewer Export & Demo
-Handoff), Milestone 9 (Policy & Control Catalog), and Milestone 10 (Control Assurance History &
-Drift). This document describes the target
+Handoff), Milestone 9 (Policy & Control Catalog), Milestone 10 (Control Assurance History &
+Drift), and Milestone 11 (Integrated Assurance Review Pack). This document describes the target
 architecture for the full platform and marks, plane by plane, what exists today versus what is
 designed but not yet built. Nothing described as "Planned" should be treated as available.
 
@@ -144,7 +144,10 @@ compliance officers, research leadership — via Fabric and Power BI.
   and a demo smoke/runbook handoff under `outputs/reviewer/` and `docs/demo/`. Milestone 9 adds a
   read-only Policy & Controls reviewer page when generated `outputs/policy/` files exist.
   Milestone 10 adds a read-only Assurance History / Drift reviewer page when generated
-  `outputs/assurance/` files exist. The
+  `outputs/assurance/` files exist. Milestone 11 adds
+  `src/governance_platform/reviewer/assurance_pack.py`, `outputs/assurance_pack/`, and a
+  read-only Assurance Review Pack page that cross-links briefing, policy/control, evidence, and
+  drift outputs for reviewer handoff. The
   future Fabric semantic model and dashboard designs are specified in
   [`fabric/semantic_model/README.md`](../fabric/semantic_model/README.md) and
   [`fabric/dashboards/README.md`](../fabric/dashboards/README.md), but no Fabric workspace,
@@ -249,9 +252,11 @@ every other plane deploys onto — it doesn't produce governance data itself.
    those outputs. As of Milestone 8, reviewer briefing exports, saved reviewer views, an evidence
    index, and demo handoff checks are generated locally from the same outputs; Fabric/Power BI
    dashboards, authentication, production hosting, enterprise monitoring, alerting, and live
-   refresh remain future concerns. As of Milestone 9, reviewers can also inspect generated
-   policy/control catalog and traceability outputs locally. As of Milestone 10, reviewers can
-   inspect generated assurance-history drift outputs locally.
+  refresh remain future concerns. As of Milestone 9, reviewers can also inspect generated
+  policy/control catalog and traceability outputs locally. As of Milestone 10, reviewers can
+  inspect generated assurance-history drift outputs locally. As of Milestone 11, reviewers can
+  inspect a generated integrated assurance review pack locally; it is not workflow automation,
+  notification delivery, remediation, or a production assurance store.
 6. All of the above runs on infrastructure provisioned and operated by the **engineering /
    infrastructure plane** — currently a local Python package, a dev container, and CI; Snowflake
    and Fabric are documented intentions, not live systems.

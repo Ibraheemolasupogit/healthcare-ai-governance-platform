@@ -110,6 +110,17 @@ evidence without duplicating the control definitions.
 The assurance-history layer compares explicit local snapshots only. It does not add live policy
 enforcement, scheduled checks, alerting, remediation, or production observability.
 
+## Integrated Review Pack Linkage
+
+Milestone 11 uses the catalog and assurance drift outputs when building
+`outputs/assurance_pack/assurance_evidence_map.csv`. Priority findings in the pack carry control
+IDs, policy IDs, evidence refs, drift IDs where applicable, reviewer locations, and reviewer
+guidance. This makes the generated review pack a compact handoff index over implemented controls
+and evidence, not a duplicate control catalog or a new evaluation engine.
+
+The review pack contains review recommendations only. It does not execute approvals,
+remediation, notifications, or workflow automation.
+
 ## Control Lifecycle
 
 Adding or changing a control should follow this sequence:
@@ -120,7 +131,8 @@ Adding or changing a control should follow this sequence:
 4. Run `python scripts/generate_reviewer_bundle.py`.
 5. Run `python scripts/generate_policy_catalog.py`.
 6. Run `python scripts/generate_assurance_history.py`.
-7. Run lint, tests, and repository validation.
+7. Run `python scripts/generate_assurance_pack.py`.
+8. Run lint, tests, and repository validation.
 
 Catalog validation is expected to fail if implemented controls and catalog metadata drift apart.
 

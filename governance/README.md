@@ -41,8 +41,11 @@ interpretation, and limitations over the implemented compliance controls; it is 
 policy engine or live enforcement system. As of Milestone 10,
 `src/governance_platform/compliance/assurance.py` adds explicit local assurance snapshots and
 deterministic drift comparison over compliance/catalog outputs; it is not live monitoring,
-scheduling, alerting, remediation, or a production history store. See each document's "Current
-status" section for exactly what that does and does not cover.
+scheduling, alerting, remediation, or a production history store. As of Milestone 11,
+`src/governance_platform/reviewer/assurance_pack.py` aggregates briefing, catalog, evidence, and
+drift outputs into a concise review pack; it is reviewer handoff packaging, not workflow
+automation, notifications, remediation, or a new governance evaluation layer. See each document's
+"Current status" section for exactly what that does and does not cover.
 
 ## Domains
 

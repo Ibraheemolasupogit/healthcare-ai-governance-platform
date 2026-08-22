@@ -1,7 +1,7 @@
 # Reviewer Demo Runbook
 
 This runbook supports a local reviewer walkthrough of the synthetic healthcare AI governance
-platform through Milestone 10. It is for demonstration and review only.
+platform through Milestone 11. It is for demonstration and review only.
 
 ## 1. Environment Setup
 
@@ -44,12 +44,14 @@ Expected deterministic anchors:
 ## 4. Reviewer Export Generation
 
 Build the Milestone 8 reviewer handoff bundle, Milestone 9 policy/control catalog, and
-Milestone 10 assurance-history drift outputs.
+Milestone 10 assurance-history drift outputs, then build the Milestone 11 integrated assurance
+review pack.
 
 ```bash
 python scripts/generate_reviewer_bundle.py
 python scripts/generate_policy_catalog.py
 python scripts/generate_assurance_history.py
+python scripts/generate_assurance_pack.py
 ```
 
 Generated files are written to `outputs/reviewer/`:
@@ -80,6 +82,14 @@ Assurance history files are written to `outputs/assurance/`:
 - `assurance_drift_summary.json`
 - `assurance_drift_report.md`
 
+Integrated assurance review pack files are written to `outputs/assurance_pack/`:
+
+- `assurance_review_pack.json`
+- `priority_findings.csv`
+- `reviewer_actions.csv`
+- `assurance_evidence_map.csv`
+- `assurance_review_pack.md`
+
 ## 5. Start The Streamlit Portal
 
 ```bash
@@ -100,7 +110,8 @@ Open the local URL printed by Streamlit. The app is local only and read only.
 8. Evidence reference
 9. Policy/control traceability
 10. Assurance history and drift
-11. Reviewer briefing export
+11. Integrated assurance review pack
+12. Reviewer briefing export
 
 ## 7. What To Show On Each Portal Page
 
@@ -130,6 +141,11 @@ implementation references and reviewer guidance.
 `AS-0002`, risk score delta `-2`, resolved `CTRL-0014` for `MD-0003`, new low-severity `CTRL-0005`
 operational warning, and changed policy IDs `POL-0008` and `POL-0009`.
 
+**Assurance Review Pack:** show pack `ARP-0001`, priority finding `PF-0001` for the controlled
+`CTRL-0005` drift, priority finding `PF-0002` for current `CTRL-0014` model-readiness warning,
+reviewer actions `RA-0001` through `RA-0003`, and evidence map rows linking findings to policy,
+control, evidence, and drift IDs.
+
 ## 8. Evidence IDs And Drill-through Paths
 
 Use these deterministic IDs during the review:
@@ -153,6 +169,10 @@ Use these deterministic IDs during the review:
 - `AS-0002` - controlled comparison assurance snapshot
 - `AC-0001` - assurance comparison
 - `CD-0001` / `CD-0002` - control drift rows in the generated comparison
+- `ARP-0001` - integrated assurance review pack
+- `PF-0001` - priority finding for the controlled `CTRL-0005` new-warning drift
+- `PF-0002` - priority finding for the current `CTRL-0014` warning
+- `RA-0001` - first review-only action in the integrated pack
 
 Suggested drill-through path:
 
@@ -162,6 +182,7 @@ Executive posture -> Data & Model Governance filter risk_tier=high -> MD-0003
 -> Compliance & Risk result CR-0034 -> Evidence reference model:MD-0003
 -> Policy & Controls filter CTRL-0014 -> outputs/policy/policy_assurance_summary.md
 -> Assurance History / Drift -> outputs/assurance/assurance_drift_report.md
+-> Assurance Review Pack -> outputs/assurance_pack/assurance_review_pack.md
 -> outputs/reviewer/reviewer_briefing.md
 ```
 
@@ -191,6 +212,7 @@ This demo is local, deterministic, read-only, and synthetic-data-only. It does n
 - Purview integration
 - real-time monitoring, scheduled evaluation, alerting, or enterprise observability
 - automatic remediation or a production history database
+- workflow automation, notifications, or external governance integrations
 - Terraform deployment
 - Salesforce integration
 - regulatory certification

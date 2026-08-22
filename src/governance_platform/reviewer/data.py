@@ -92,6 +92,16 @@ class ReviewerAssuranceState:
     comparison: Any
 
 
+@dataclass(frozen=True)
+class ReviewerAssurancePackState:
+    """Loaded integrated assurance review pack rows for the reviewer portal."""
+
+    pack: Any
+    priority_finding_rows: tuple[dict[str, Any], ...]
+    reviewer_action_rows: tuple[dict[str, Any], ...]
+    evidence_map_rows: tuple[dict[str, Any], ...]
+
+
 def _repo_root() -> Path:
     return Path(__file__).resolve().parents[3]
 
@@ -151,6 +161,25 @@ def missing_assurance_output_paths(outputs_root: str | Path) -> tuple[Path, ...]
     """Return missing assurance-history files under ``outputs_root``."""
     return tuple(
         path for path in required_assurance_output_paths(outputs_root) if not path.is_file()
+    )
+
+
+def required_assurance_pack_output_paths(outputs_root: str | Path) -> tuple[Path, ...]:
+    """Canonical integrated assurance pack files the optional portal page expects."""
+    root = Path(outputs_root)
+    return (
+        root / "assurance_pack" / "assurance_review_pack.json",
+        root / "assurance_pack" / "priority_findings.csv",
+        root / "assurance_pack" / "reviewer_actions.csv",
+        root / "assurance_pack" / "assurance_evidence_map.csv",
+        root / "assurance_pack" / "assurance_review_pack.md",
+    )
+
+
+def missing_assurance_pack_output_paths(outputs_root: str | Path) -> tuple[Path, ...]:
+    """Return missing integrated assurance pack files under ``outputs_root``."""
+    return tuple(
+        path for path in required_assurance_pack_output_paths(outputs_root) if not path.is_file()
     )
 
 
@@ -303,6 +332,39 @@ def load_reviewer_assurance_state(
         control_drift_rows=control_rows,
         risk_drift_rows=risk_rows,
         comparison=comparison,
+    )
+
+
+def load_reviewer_assurance_pack_state(
+    outputs_root: str | Path | None = None,
+) -> ReviewerAssurancePackState:
+    """Load generated integrated assurance pack outputs for the optional reviewer page."""
+    from governance_platform.reviewer.assurance_pack import load_assurance_review_pack
+
+    root = Path(outputs_root) if outputs_root is not None else default_outputs_root()
+    missing = missing_assurance_pack_output_paths(root)
+    if missing:
+        raise MissingGeneratedOutputError(missing)
+
+    pack = load_assurance_review_pack(root / "assurance_pack")
+    with (root / "assurance_pack" / "priority_findings.csv").open(
+        newline="", encoding="utf-8"
+    ) as fh:
+        priority_rows = tuple(dict(row) for row in csv.DictReader(fh))
+    with (root / "assurance_pack" / "reviewer_actions.csv").open(
+        newline="", encoding="utf-8"
+    ) as fh:
+        action_rows = tuple(dict(row) for row in csv.DictReader(fh))
+    with (root / "assurance_pack" / "assurance_evidence_map.csv").open(
+        newline="", encoding="utf-8"
+    ) as fh:
+        evidence_rows = tuple(dict(row) for row in csv.DictReader(fh))
+
+    return ReviewerAssurancePackState(
+        pack=pack,
+        priority_finding_rows=priority_rows,
+        reviewer_action_rows=action_rows,
+        evidence_map_rows=evidence_rows,
     )
 
 
