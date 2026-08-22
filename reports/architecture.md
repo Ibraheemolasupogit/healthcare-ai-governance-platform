@@ -5,8 +5,10 @@ Milestone 3 (Access & Research Control Plane), Milestone 4 (Audit & Evidence Pla
 (Risk & Compliance Monitoring Plane), Milestone 6 (Governance Reporting & Semantic Plane),
 Milestone 7 (Local Governance Reviewer Portal), Milestone 8 (Reviewer Export & Demo
 Handoff), Milestone 9 (Policy & Control Catalog), Milestone 10 (Control Assurance History &
-Drift), Milestone 11 (Integrated Assurance Review Pack), and Milestone 12 (Reviewer Acceptance &
-Demo Readiness). This document describes the target architecture for the full platform and marks,
+Drift), Milestone 11 (Integrated Assurance Review Pack), Milestone 12 (Reviewer Acceptance &
+Demo Readiness), Milestone 13 (Offline Assurance Archive & Verification Manifest), and Milestone
+14 (Final Portfolio Polish & Release Assurance). This document describes the target architecture
+for the full platform and marks,
 plane by plane, what exists today versus what is designed but not yet built. Nothing described as
 "Planned" should be treated as available.
 
@@ -15,6 +17,11 @@ Milestone 13 adds an offline assurance handoff layer in
 reviewer documentation with deterministic SHA-256 checksums and a read-only verifier. It does not
 copy governance datasets, sign artifacts, provide external attestation, or imply approval,
 certification, authenticity, or production deployment.
+
+Milestone 14 adds a final release-assurance summary and a fail-fast orchestration entrypoint that
+runs the existing generators, quality gates, repository validation, reviewer smoke check, and
+offline archive verification. It aggregates existing state only; it is not a deployment gate,
+approval record, certification, or external attestation.
 
 **Data statement:** the platform is designed to operate on synthetic data only. No real patient
 data, no production Snowflake account, no Fabric tenant, and no live cloud infrastructure exist
@@ -174,6 +181,16 @@ and metadata.
   structure, Python package skeleton, Docker dev image, restrained Terraform scaffold, CI
   pipeline. See [`infrastructure/`](../infrastructure/) and [`.github/workflows/`](../.github/workflows/).
 
+## Reviewer assurance overlay
+
+Milestones 7–14 form a read-only reviewer assurance overlay across the seven planes rather than a
+new governance plane. The local Streamlit portal presents generated state; reviewer exports,
+policy/control traceability, assurance history, integrated findings, readiness evidence, archive
+checksums, and the final portfolio summary package that same state for deterministic handoff.
+These artifacts remain local, synthetic-data-only, non-production, and read-only. They do not
+replace the underlying governance logic or introduce live identity, policy enforcement, monitoring,
+approval, deployment, or certification.
+
 ## Plane relationships
 
 ```mermaid
@@ -206,6 +223,10 @@ graph TB
         EI1["Docker · Terraform · CI/CD · Snowflake"]
     end
 
+    subgraph RO["Reviewer Assurance Overlay"]
+        RO1["Portal · evidence · readiness · archive"]
+    end
+
     GC1 --> MI1
     GC1 --> AR1
     MI1 --> AR1
@@ -215,6 +236,10 @@ graph TB
     RC1 --> RP1
     AE1 --> RP1
     MI1 --> RP1
+    RP1 --> RO1
+    RC1 --> RO1
+    AE1 --> RO1
+    EI1 -.supports local checks.-> RO1
 
     EI1 -.provides platform for.-> MI1
     EI1 -.provides platform for.-> AR1
@@ -226,8 +251,9 @@ graph TB
 Read top-to-bottom-ish rather than strictly layered: the governance control plane defines the
 rules that the inventory and access planes operate under; access activity feeds the audit plane;
 inventory and audit state together feed risk/compliance scoring; and audit, inventory, and risk
-state are all surfaced through reporting. The engineering/infrastructure plane is the substrate
-every other plane deploys onto — it doesn't produce governance data itself.
+state are all surfaced through reporting. The reviewer assurance overlay packages those outputs
+for read-only inspection and deterministic handoff. The engineering/infrastructure plane is the
+substrate every other plane deploys onto — it doesn't produce governance data itself.
 
 ## Data flow intent (target state, not current state)
 
@@ -269,7 +295,8 @@ every other plane deploys onto — it doesn't produce governance data itself.
   notification delivery, remediation, or a production assurance store. As of Milestone 12,
   reviewers can inspect generated review-readiness criteria, artifact completeness, and
   demo-readiness evidence locally; this is not human sign-off, production acceptance,
-  governance-board approval, or certification.
+  governance-board approval, or certification. Milestone 13 adds offline manifest/checksum
+  verification; Milestone 14 adds the final assurance summary and full-pipeline orchestration.
 6. All of the above runs on infrastructure provisioned and operated by the **engineering /
    infrastructure plane** — currently a local Python package, a dev container, and CI; Snowflake
    and Fabric are documented intentions, not live systems.
@@ -280,3 +307,7 @@ every other plane deploys onto — it doesn't produce governance data itself.
 - [`governance/`](../governance/) — operating-model documentation per governance domain
 - [`infrastructure/snowflake/`](../infrastructure/snowflake/) — intended Snowflake responsibilities
 - [`fabric/`](../fabric/) — intended Fabric/Power BI reporting architecture
+- [`src/governance_platform/reviewer/archive.py`](../src/governance_platform/reviewer/archive.py)
+  — offline artifact manifest and SHA-256 verification
+- [`src/governance_platform/reviewer/final_assurance.py`](../src/governance_platform/reviewer/final_assurance.py)
+  — final portfolio assurance aggregation

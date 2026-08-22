@@ -53,6 +53,10 @@ As of Milestone 13, `src/governance_platform/reviewer/archive.py` provides a det
 manifest and SHA-256 verification layer over selected reviewer artifacts. It proves byte equality
 with the manifest only; it does not provide signing, external attestation, authenticity, approval,
 or certification.
+As of Milestone 14, `scripts/run_portfolio_assurance.py` aggregates existing generation,
+validation, readiness, smoke, and offline archive results into a final portfolio summary. This is
+release-assurance evidence for a local synthetic repository, not production acceptance or formal
+governance approval.
 
 ## Domains
 

@@ -39,3 +39,7 @@ jobs:
 
       - name: Validate repository structure
         run: python scripts/validate_repository.py
+
+      - name: Run complete portfolio assurance (Python 3.12)
+        if: matrix.python-version == '3.12'
+        run: python scripts/run_portfolio_assurance.py

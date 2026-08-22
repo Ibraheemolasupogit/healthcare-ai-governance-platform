@@ -90,3 +90,9 @@ artifacts, exact-byte SHA-256 checksums, archive validation, and an offline veri
 `python scripts/verify_offline_archive.py` recalculates the hashes without regenerating governance
 state. This proves file integrity against the manifest only; it is not a signature, attestation,
 approval, certification, production artifact registry, or deployment package.
+
+As of Milestone 14, `final/` is populated by running
+`python scripts/run_portfolio_assurance.py`: a final deterministic summary of pipeline, quality
+gate, review-readiness, governance-posture, archive-verification, and limitation status. It is
+release-assurance evidence for this local portfolio only, not production acceptance or
+certification.

@@ -80,6 +80,14 @@ from governance_platform.reviewer.exports import (
     unresolved_evidence_refs,
     validate_reviewer_bundle,
 )
+from governance_platform.reviewer.final_assurance import (
+    FINAL_ASSURANCE_OUTPUT_FILENAMES,
+    PortfolioAssuranceSummary,
+    build_portfolio_assurance_summary,
+    export_portfolio_assurance_summary,
+    load_portfolio_assurance_summary,
+    render_portfolio_assurance_summary,
+)
 from governance_platform.reviewer.readiness import (
     READINESS_OUTPUT_FILENAMES,
     AcceptanceCategory,
@@ -108,6 +116,7 @@ from governance_platform.reviewer.readiness import (
 __all__ = [
     "ARCHIVE_OUTPUT_FILENAMES",
     "ASSURANCE_PACK_OUTPUT_FILENAMES",
+    "FINAL_ASSURANCE_OUTPUT_FILENAMES",
     "READINESS_OUTPUT_FILENAMES",
     "AssuranceReviewPack",
     "AssuranceReviewPackBundle",
@@ -125,6 +134,7 @@ __all__ = [
     "FilteredReviewerView",
     "MissingGeneratedOutputError",
     "PriorityFinding",
+    "PortfolioAssuranceSummary",
     "ReviewerAssurancePackState",
     "ReviewerAssuranceState",
     "ReviewerAction",
@@ -146,6 +156,7 @@ __all__ = [
     "build_demo_readiness_result",
     "build_filtered_reviewer_views",
     "build_priority_findings",
+    "build_portfolio_assurance_summary",
     "build_reviewer_briefing",
     "build_reviewer_actions",
     "build_reviewer_evidence_index",
@@ -160,6 +171,7 @@ __all__ = [
     "evidence_reference_rows",
     "export_assurance_review_pack_bundle",
     "export_archive_bundle",
+    "export_portfolio_assurance_summary",
     "export_review_readiness_bundle",
     "export_reviewer_bundle",
     "filter_rows",
@@ -170,6 +182,7 @@ __all__ = [
     "load_assurance_review_pack",
     "load_archive_manifest",
     "load_archive_validation",
+    "load_portfolio_assurance_summary",
     "load_acceptance_checklist",
     "load_demo_readiness",
     "load_reviewer_briefing",
@@ -187,6 +200,7 @@ __all__ = [
     "rejection_reason_rows",
     "render_assurance_review_pack_markdown",
     "render_offline_handoff_guide",
+    "render_portfolio_assurance_summary",
     "render_review_readiness_report",
     "required_output_paths",
     "required_readiness_output_paths",

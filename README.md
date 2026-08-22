@@ -19,8 +19,9 @@ Research Control Plane), Milestone 4 (Audit & Evidence Plane), Milestone 5 (Risk
 Compliance Monitoring Plane), Milestone 6 (Governance Reporting & Semantic Plane), Milestone 7
 (Local Governance Reviewer Portal), Milestone 8 (Reviewer Export & Demo Handoff), Milestone 9
 (Policy & Control Catalog), Milestone 10 (Control Assurance History & Drift), Milestone 11
-(Integrated Assurance Review Pack), Milestone 12 (Reviewer Acceptance & Demo Readiness), and
-Milestone 13 (Offline Assurance Archive & Verification Manifest).**
+(Integrated Assurance Review Pack), Milestone 12 (Reviewer Acceptance & Demo Readiness), Milestone
+13 (Offline Assurance Archive & Verification Manifest), and Milestone 14 (Final Portfolio Polish
+& Release Assurance).**
 Milestone 2 adds a typed, validated metadata/inventory plane and a deterministic synthetic
 dataset/model/research portfolio generated from it. Milestone 3 adds a **local governance
 simulation** of the access request → decision → grant → revocation/expiry workflow, evaluated
@@ -38,9 +39,10 @@ adds a concise integrated assurance review pack that cross-links briefing, polic
 evidence, and drift outputs for reviewer handoff. Milestone 12 adds deterministic
 review-readiness criteria, artifact completeness checks, demo-readiness evidence, and a blank
 reviewer walkthrough notes template. Milestone 13 adds a deterministic offline artifact manifest,
-SHA-256 verification, archive completeness validation, and an independent verification guide. No
-model approval automation, responsible AI workflow
-automation, live identity/RBAC/SIEM enforcement, authentication, production hosting, scheduling,
+SHA-256 verification, archive completeness validation, and an independent verification guide.
+Milestone 14 adds a fail-fast full pipeline assurance entrypoint and final portfolio assurance
+summary. No model approval automation, responsible AI workflow automation, live identity/RBAC/SIEM
+enforcement, authentication, production hosting, scheduling,
 alerting, remediation, formal sign-off, production acceptance, or Fabric/Power BI deployment has
 been implemented yet. See [Implemented vs. Planned](#implemented-vs-planned) below before assuming
 any capability exists.
@@ -61,6 +63,10 @@ The platform is designed around seven governance planes, described in full in
 
 Core technologies planned across the platform: Python, SQL, Snowflake, Microsoft Fabric, Power
 BI, Docker, Terraform, GitHub Actions, and policy-as-code tooling.
+
+Implemented locally: Python 3.11+, Pydantic models, deterministic JSON/CSV/Markdown generation,
+Ruff, pytest, and a read-only Streamlit reviewer portal. Snowflake, Fabric, Power BI, identity,
+and cloud hosting remain future integration architecture.
 
 ## Repository structure
 
@@ -94,8 +100,9 @@ BI, Docker, Terraform, GitHub Actions, and policy-as-code tooling.
 │   ├── policy/                 # Generated policy/control catalog outputs (gitignored)
 │   ├── assurance/              # Generated assurance-history drift outputs (gitignored)
 │   ├── assurance_pack/         # Generated integrated assurance review pack (gitignored)
-│   └── readiness/              # Generated reviewer readiness evidence (gitignored)
-│   └── archive/                 # Generated offline manifest/checksums/guide (gitignored)
+│   ├── readiness/              # Generated reviewer readiness evidence (gitignored)
+│   ├── archive/                # Generated offline manifest/checksums/guide (gitignored)
+│   └── final/                  # Generated final portfolio assurance summary (gitignored)
 ├── reports/
 │   └── architecture.md         # Full architecture write-up + diagram
 ├── docs/
@@ -113,6 +120,7 @@ BI, Docker, Terraform, GitHub Actions, and policy-as-code tooling.
 │   ├── generate_review_readiness.py # Build review-readiness checklist/report
 │   ├── generate_offline_archive.py # Build deterministic archive manifest/checksums
 │   ├── verify_offline_archive.py # Recalculate archive checksums read-only
+│   ├── run_portfolio_assurance.py # Run full generation, quality gates, and smoke checks
 │   └── smoke_reviewer_demo.py  # Validate local reviewer demo readiness
 ├── tests/                      # Foundation + inventory + access + audit + compliance + reporting + reviewer
 └── .github/workflows/          # CI: install, lint, test, validate
@@ -168,6 +176,21 @@ This is an offline integrity and handoff layer over local synthetic artifacts. M
 do not prove authenticity, correctness, regulatory approval, external certification, human
 approval, production deployment, or production acceptance. Digital signing, external attestation,
 remote storage, and formal approval remain planned.
+
+### Implemented (Milestone 14 — Final Portfolio Polish & Release Assurance)
+
+- A typed final assurance summary in `src/governance_platform/reviewer/final_assurance.py` that
+  aggregates existing compliance, readiness, and archive validation state without adding
+  governance logic
+- `scripts/run_portfolio_assurance.py`, a fail-fast orchestration entrypoint for the complete
+  generation pipeline, archive verification, lint, format, tests, repository validation, and
+  reviewer smoke checks
+- Deterministic `outputs/final/portfolio_assurance_summary.json` and
+  `portfolio_assurance_summary.md` outputs with explicit local/synthetic/non-production boundaries
+- CI coverage for the complete assurance entrypoint on Python 3.12 without external credentials
+
+This milestone hardens presentation and reproducibility. It does not create approvals, signatures,
+deployments, live monitoring, external attestation, certification, or new governance capabilities.
 
 ### Implemented (Milestone 11 — Integrated Assurance Review Pack)
 
@@ -531,7 +554,7 @@ assumed to exist.
 
 ### Explicit non-goals
 
-Milestones 2–12 are metadata, inventory, local access-control, audit/evidence, compliance,
+Milestones 2–14 are metadata, inventory, local access-control, audit/evidence, compliance,
 reporting, reviewer-portal, reviewer-export, policy-catalog, assurance-history, assurance-pack,
 and review-readiness **simulations** only. They do not implement: Snowflake connectivity or deployed schemas, live
 Snowflake RBAC or user/role provisioning, Entra ID integration, authentication, real user accounts,
@@ -594,7 +617,10 @@ python scripts/generate_review_readiness.py
 python scripts/generate_offline_archive.py
 python scripts/verify_offline_archive.py
 
-# Smoke-check local reviewer demo readiness (Milestones 8–12):
+# Run the complete final portfolio assurance path (Milestone 14):
+python scripts/run_portfolio_assurance.py
+
+# Or smoke-check local reviewer demo readiness independently (Milestones 8–13):
 python scripts/smoke_reviewer_demo.py
 
 # Start the local reviewer portal (Milestone 7):
@@ -1082,6 +1108,33 @@ available review artifacts, and `not_ready` is used when required criteria are i
 review-readiness evidence only. It is not human review, organisational approval,
 governance-board sign-off, production acceptance, external certification, or deployment evidence.
 
+## Final portfolio assurance outputs
+
+`python scripts/run_portfolio_assurance.py` runs the full deterministic generation pipeline, archive
+verification, quality gates, and reviewer smoke checks. It writes:
+
+```text
+outputs/final/portfolio_assurance_summary.json  # canonical final assurance summary
+outputs/final/portfolio_assurance_summary.md    # concise reviewer-readable summary
+```
+
+The summary reports pipeline and quality-gate status, current posture, bounded risk score,
+review-readiness status, archive verification, key artifact references, and limitations. It is
+release-assurance evidence for this local synthetic portfolio, not production acceptance,
+certification, authenticity, or human approval.
+
+## Reviewer navigation
+
+- [`docs/demo/reviewer-demo-runbook.md`](docs/demo/reviewer-demo-runbook.md) — deterministic
+  setup, walkthrough, drill-through IDs, shutdown, and claim boundaries
+- [`docs/demo/reviewer-walkthrough-template.md`](docs/demo/reviewer-walkthrough-template.md) —
+  blank notes template for an actual future review; not an approval record
+- [`outputs/README.md`](outputs/README.md) — generated-output locations and provenance boundaries
+- [`governance/controls/README.md`](governance/controls/README.md) — policy/control ownership and
+  evidence traceability
+- [`src/governance_platform/reviewer_app.py`](src/governance_platform/reviewer_app.py) — local
+  read-only Streamlit entrypoint
+
 ## Architecture and design records
 
 - [`reports/architecture.md`](reports/architecture.md) — the seven-plane architecture and diagram
@@ -1110,6 +1163,10 @@ governance-board sign-off, production acceptance, external certification, or dep
 - [`src/governance_platform/reviewer/readiness.py`](src/governance_platform/reviewer/readiness.py)
   and [`docs/demo/reviewer-walkthrough-template.md`](docs/demo/reviewer-walkthrough-template.md)
   — the Milestone 12 reviewer acceptance and demo-readiness implementation
+- [`src/governance_platform/reviewer/archive.py`](src/governance_platform/reviewer/archive.py)
+  — the Milestone 13 offline archive manifest and checksum verifier
+- [`src/governance_platform/reviewer/final_assurance.py`](src/governance_platform/reviewer/final_assurance.py)
+  — the Milestone 14 final portfolio assurance summary
 - [`governance/`](governance/) — operating-model documentation per governance domain
 - [`infrastructure/snowflake/`](infrastructure/snowflake/) — intended Snowflake governance
   responsibilities (no live account)

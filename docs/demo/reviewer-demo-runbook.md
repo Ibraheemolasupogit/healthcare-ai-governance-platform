@@ -1,7 +1,7 @@
 # Reviewer Demo Runbook
 
 This runbook supports a local reviewer walkthrough of the synthetic healthcare AI governance
-platform through Milestone 13. It is for demonstration and review only.
+platform through Milestone 14. It is for demonstration and review only.
 
 ## 1. Environment Setup
 
@@ -55,6 +55,9 @@ python scripts/generate_assurance_pack.py
 python scripts/generate_review_readiness.py
 python scripts/generate_offline_archive.py
 python scripts/verify_offline_archive.py
+
+# Or run the complete generation, validation, smoke, and archive path:
+python scripts/run_portfolio_assurance.py
 ```
 
 Generated files are written to `outputs/reviewer/`:
@@ -108,6 +111,10 @@ production acceptance, or certification record.
 The offline handoff guide is generated at `outputs/archive/offline_handoff_guide.md`. Verify the
 manifest with `python scripts/verify_offline_archive.py`; this checks exact-byte SHA-256 equality
 for selected files and does not establish authenticity, approval, certification, or deployment.
+
+The final portfolio assurance summary is generated at
+`outputs/final/portfolio_assurance_summary.md`. It aggregates existing validation state and is a
+release-assurance handoff artifact, not a production gate or approval record.
 
 ## 5. Start The Streamlit Portal
 
