@@ -17,8 +17,8 @@ The platform is being built in milestones. **This repository currently contains 
 (Platform Foundation), Milestone 2 (Synthetic Research & AI Inventory), Milestone 3 (Access &
 Research Control Plane), Milestone 4 (Audit & Evidence Plane), Milestone 5 (Risk &
 Compliance Monitoring Plane), Milestone 6 (Governance Reporting & Semantic Plane), Milestone 7
-(Local Governance Reviewer Portal), Milestone 8 (Reviewer Export & Demo Handoff), and Milestone 9
-(Policy & Control Catalog).**
+(Local Governance Reviewer Portal), Milestone 8 (Reviewer Export & Demo Handoff), Milestone 9
+(Policy & Control Catalog), and Milestone 10 (Control Assurance History & Drift).**
 Milestone 2 adds a typed, validated metadata/inventory plane and a deterministic synthetic
 dataset/model/research portfolio generated from it. Milestone 3 adds a **local governance
 simulation** of the access request → decision → grant → revocation/expiry workflow, evaluated
@@ -30,10 +30,12 @@ contracts, deterministic governance KPIs, and an executive summary over existing
 Milestone 7 adds a local Streamlit reviewer portal over those generated outputs. Milestone 8 adds
 deterministic reviewer briefing exports, saved reviewer views, an evidence index, and a local demo
 runbook/smoke check. Milestone 9 adds a deterministic policy/control catalog and
-control-to-evidence traceability matrix over the implemented controls. No model approval
-automation, responsible AI workflow automation, live identity/RBAC/SIEM enforcement,
-authentication, production hosting, or Fabric/Power BI deployment has been implemented yet. See
-[Implemented vs. Planned](#implemented-vs-planned) below before assuming any capability exists.
+control-to-evidence traceability matrix over the implemented controls. Milestone 10 adds explicit
+local assurance snapshots and deterministic control/risk/posture drift reporting. No model
+approval automation, responsible AI workflow automation, live identity/RBAC/SIEM enforcement,
+authentication, production hosting, scheduling, alerting, remediation, or Fabric/Power BI
+deployment has been implemented yet. See [Implemented vs. Planned](#implemented-vs-planned)
+below before assuming any capability exists.
 
 ## Platform intent
 
@@ -61,7 +63,7 @@ BI, Docker, Terraform, GitHub Actions, and policy-as-code tooling.
 │   ├── inventory/              # Metadata/inventory plane: entities, generation, validation, I/O
 │   ├── access/                 # Access/research-control plane: request/decision/grant simulation
 │   ├── audit/                  # Audit/evidence plane: append-only log + evidence-pack generation
-│   ├── compliance/             # Risk/compliance plane: controls, catalog, findings, posture
+│   ├── compliance/             # Risk/compliance plane: controls, catalog, assurance, posture
 │   ├── reporting/              # Reporting plane: deterministic KPIs and snapshots
 │   ├── reviewer/               # Reviewer portal + export/filter/drill-through helpers
 │   └── reviewer_app.py         # Local Streamlit reviewer portal
@@ -81,7 +83,8 @@ BI, Docker, Terraform, GitHub Actions, and policy-as-code tooling.
 │   ├── compliance/             # Generated control/risk/posture outputs (gitignored)
 │   ├── reporting/              # Generated reporting KPIs/snapshot (gitignored)
 │   ├── reviewer/               # Generated reviewer briefing bundle/views (gitignored)
-│   └── policy/                 # Generated policy/control catalog outputs (gitignored)
+│   ├── policy/                 # Generated policy/control catalog outputs (gitignored)
+│   └── assurance/              # Generated assurance-history drift outputs (gitignored)
 ├── reports/
 │   └── architecture.md         # Full architecture write-up + diagram
 ├── docs/
@@ -94,12 +97,39 @@ BI, Docker, Terraform, GitHub Actions, and policy-as-code tooling.
 │   ├── generate_reporting.py   # Build reporting KPIs and executive summary
 │   ├── generate_reviewer_bundle.py # Build reviewer briefing bundle/views
 │   ├── generate_policy_catalog.py # Build policy/control catalog and traceability matrix
+│   ├── generate_assurance_history.py # Build assurance snapshots and drift report
 │   └── smoke_reviewer_demo.py  # Validate local reviewer demo readiness
 ├── tests/                      # Foundation + inventory + access + audit + compliance + reporting + reviewer
 └── .github/workflows/          # CI: install, lint, test, validate
 ```
 
 ## Implemented vs. Planned
+
+### Implemented (Milestone 10 — Control Assurance History & Drift)
+
+- A typed immutable assurance-history layer in
+  `src/governance_platform/compliance/assurance.py` for explicit local snapshots,
+  control drift, risk drift, posture comparison, and small in-memory history loading
+- Deterministic baseline and controlled comparison snapshots that preserve canonical generated
+  outputs; the controlled variant resolves the existing `CTRL-0014` warning for `MD-0003` and
+  introduces one low-severity operational review-date warning for drift demonstration
+- Drift comparison across control status, finding code, severity, bounded risk score, posture,
+  changed policy domains, and evidence references, with stable ordering and missing-control
+  handling
+- Policy/catalog linkage on control drift rows: control ID, policy ID, objective, evidence
+  requirement, evidence refs, and reviewer guidance come from the Milestone 9 catalog metadata
+- `scripts/generate_assurance_history.py`, which loads current compliance and policy catalog
+  outputs, builds/validates snapshots and comparison, exports `outputs/assurance/`, and reloads
+  canonical outputs
+- A read-only **Assurance History / Drift** page in the local reviewer portal when
+  `outputs/assurance/` exists
+- pytest coverage for snapshot validation, duplicate IDs, deterministic ordering, resolved/new
+  findings, improved/degraded risk, severity/posture changes, missing controls, export/reload,
+  deterministic exports, reviewer loading, and synthetic/local claim safeguards
+
+This is explicit historical comparison over local synthetic snapshots. It is not real-time
+monitoring, scheduled evaluation, alerting, automatic remediation, production observability, a
+production history database, or regulatory certification.
 
 ### Implemented (Milestone 9 — Policy & Control Catalog)
 
@@ -390,6 +420,7 @@ automation, or any Snowflake connectivity (see [Explicit non-goals](#explicit-no
   Entra ID audit-log ingestion feeding the audit plane — Milestone 4's audit log is local and
   self-contained, not fed by any of these
 - Real-time event streaming or production observability of any kind
+- Scheduled compliance evaluation, alerting, or a production assurance-history database
 - An incident-response engine
 - A model approval / responsible-AI review workflow with automated checks
 - Deployed Fabric semantic model and live semantic-model refresh
@@ -405,17 +436,18 @@ assumed to exist.
 
 ### Explicit non-goals
 
-Milestones 2–9 are metadata, inventory, local access-control, audit/evidence, compliance,
-reporting, reviewer-portal, reviewer-export, and policy-catalog **simulations** only. They do not
-implement: Snowflake connectivity or deployed schemas, live
+Milestones 2–10 are metadata, inventory, local access-control, audit/evidence, compliance,
+reporting, reviewer-portal, reviewer-export, policy-catalog, and assurance-history
+**simulations** only. They do not implement: Snowflake connectivity or deployed schemas, live
 Snowflake RBAC or user/role provisioning, Entra ID integration, authentication, real user accounts,
 cloud identity, live Snowflake query-history/audit-log ingestion, a real SIEM, Microsoft Purview
 integration, Entra ID audit-log ingestion, real-time streaming, production observability, an
 incident-response engine, a generic policy-as-code engine, approval-workflow automation,
 responsible-AI workflow automation, model approval automation, Fabric semantic models, Power BI
 dashboards, Terraform deployment, Salesforce workflows, regulatory certification, live monitoring,
-alerting, production hosting, automatic remediation, production compliance orchestration, or
-production access/audit/compliance enforcement of any kind. These
+scheduled evaluation, alerting, production hosting, automatic remediation, production history
+databases, production compliance orchestration, or production access/audit/compliance enforcement
+of any kind. These
 remain [Planned](#planned-later-milestones--not-implemented-in-this-repository-yet) above.
 
 ## Getting started (local development)
@@ -452,6 +484,9 @@ python scripts/generate_reviewer_bundle.py
 
 # Build policy/control catalog and traceability matrix (Milestone 9):
 python scripts/generate_policy_catalog.py
+
+# Build assurance snapshots and drift report (Milestone 10):
+python scripts/generate_assurance_history.py
 
 # Smoke-check local reviewer demo readiness (Milestone 8):
 python scripts/smoke_reviewer_demo.py
@@ -806,6 +841,9 @@ Implemented sections:
 - **Policy & Controls** — generated local policies, cataloged implemented controls, current
   status counts, implementation references, evidence requirements, and traceability rows when
   `outputs/policy/` has been generated.
+- **Assurance History / Drift** — generated baseline/comparison snapshots, risk-score delta,
+  changed controls, risk drift, changed policy domains, and evidence references when
+  `outputs/assurance/` has been generated.
 
 The app fails clearly when required generated outputs are missing and tells the reviewer which
 generation commands to run. It has no write/edit workflows, approval actions, authentication,
@@ -868,6 +906,29 @@ This is explicit governance metadata and reviewer traceability over local synthe
 not a generic policy DSL, OPA/Rego integration, live policy enforcement, automatic remediation,
 production compliance orchestration, or regulatory interpretation/certification engine.
 
+## Assurance history and drift outputs
+
+`python scripts/generate_assurance_history.py` writes deterministic assurance-history artifacts to
+`outputs/assurance/` after compliance and policy catalog outputs have been generated:
+
+```text
+outputs/assurance/assurance_snapshots.json      # canonical explicit baseline/current snapshots
+outputs/assurance/assurance_comparison.json     # canonical snapshot comparison
+outputs/assurance/control_drift.csv             # reviewer-friendly control drift rows
+outputs/assurance/risk_drift.csv                # reviewer-friendly risk drift rows
+outputs/assurance/assurance_drift_summary.json  # summary metrics for the comparison
+outputs/assurance/assurance_drift_report.md     # concise reviewer change report
+```
+
+The baseline snapshot represents the canonical current governance state. The comparison snapshot
+is a controlled synthetic variant for demonstration: `CTRL-0014` for `MD-0003` is resolved and one
+low-severity operational review-date warning is introduced. Canonical compliance, policy,
+reporting, and reviewer outputs are not overwritten.
+
+This is explicit local historical comparison only. It is not real-time monitoring, scheduled
+evaluation, alerting, automatic remediation, production observability, a production history store,
+or regulatory certification.
+
 ## Architecture and design records
 
 - [`reports/architecture.md`](reports/architecture.md) — the seven-plane architecture and diagram
@@ -889,6 +950,8 @@ production compliance orchestration, or regulatory interpretation/certification 
 - [`src/governance_platform/compliance/catalog.py`](src/governance_platform/compliance/catalog.py)
   and [`governance/controls/`](governance/controls/) — the Milestone 9 policy/control catalog and
   traceability documentation
+- [`src/governance_platform/compliance/assurance.py`](src/governance_platform/compliance/assurance.py)
+  — the Milestone 10 assurance-history snapshot and drift comparison implementation
 - [`governance/`](governance/) — operating-model documentation per governance domain
 - [`infrastructure/snowflake/`](infrastructure/snowflake/) — intended Snowflake governance
   responsibilities (no live account)

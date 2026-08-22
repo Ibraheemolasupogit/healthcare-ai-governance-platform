@@ -408,7 +408,7 @@ class ComplianceEvaluator:
                         status=ControlStatus.FAIL,
                         finding_code=FindingCode.MISSING_STEWARDSHIP_METADATA,
                         message=(
-                            f"Dataset {dataset.dataset_id} is missing owner or steward " "metadata."
+                            f"Dataset {dataset.dataset_id} is missing owner or steward metadata."
                         ),
                         evidence_refs=(
                             _entity_ref(ComplianceEntityType.DATASET, dataset.dataset_id),
@@ -805,8 +805,7 @@ class ComplianceEvaluator:
                         status=ControlStatus.FAIL,
                         finding_code=FindingCode.ACTIVE_GRANT_PROJECT_NOT_APPROVED,
                         message=(
-                            f"Active grant {grant.grant_id} does not reference an approved "
-                            "project."
+                            f"Active grant {grant.grant_id} does not reference an approved project."
                         ),
                         evidence_refs=(
                             _entity_ref(ComplianceEntityType.ACCESS_GRANT, grant.grant_id),
@@ -929,8 +928,7 @@ class ComplianceEvaluator:
                         status=ControlStatus.FAIL,
                         finding_code=FindingCode.GRANT_MISSING_APPROVAL_EVIDENCE,
                         message=(
-                            f"Grant {grant.grant_id} lacks approved decision or creation "
-                            "evidence."
+                            f"Grant {grant.grant_id} lacks approved decision or creation evidence."
                         ),
                         evidence_refs=(
                             _entity_ref(ComplianceEntityType.ACCESS_GRANT, grant.grant_id),
@@ -1052,7 +1050,7 @@ class ComplianceEvaluator:
                         status=ControlStatus.FAIL,
                         finding_code=FindingCode.INACTIVE_GRANT_STILL_ACTIVE,
                         message=(
-                            f"Grant {grant.grant_id} is revoked or expired but evaluates " "active."
+                            f"Grant {grant.grant_id} is revoked or expired but evaluates active."
                         ),
                         evidence_refs=(
                             _entity_ref(ComplianceEntityType.ACCESS_GRANT, grant.grant_id),
@@ -1183,7 +1181,7 @@ class ComplianceEvaluator:
                         status=ControlStatus.FAIL,
                         finding_code=FindingCode.CORRELATION_CHAIN_NOT_TRACEABLE,
                         message=(
-                            f"Request {request.request_id} lacks a traceable correlation " "chain."
+                            f"Request {request.request_id} lacks a traceable correlation chain."
                         ),
                         evidence_refs=(
                             _entity_ref(ComplianceEntityType.ACCESS_REQUEST, request.request_id),

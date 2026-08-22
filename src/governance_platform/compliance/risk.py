@@ -66,8 +66,7 @@ def derive_risk_indicators(
                 severity=result.severity,
                 score=score,
                 rationale=(
-                    f"{result.status.value} finding {result.finding_code.value}: "
-                    f"{result.message}"
+                    f"{result.status.value} finding {result.finding_code.value}: {result.message}"
                 ),
                 evidence_refs=result.evidence_refs,
                 evaluated_at=evaluated_at,

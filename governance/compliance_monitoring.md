@@ -53,6 +53,21 @@ requirements, and generates a control-to-evidence traceability matrix under `out
 This is reviewer traceability over implemented local controls, not a generic policy engine or
 external certification framework.
 
+## Assurance history and drift
+
+As of Milestone 10, `src/governance_platform/compliance/assurance.py` builds explicit local
+assurance snapshots and compares them for control, risk, and posture drift. The canonical baseline
+uses the current generated compliance assessment. The comparison snapshot is a controlled
+synthetic variant used for demonstration and reviewer handoff, not wall-clock telemetry.
+
+`scripts/generate_assurance_history.py` writes deterministic outputs to `outputs/assurance/`,
+including snapshot JSON, comparison JSON, control/risk drift CSVs, summary metrics, and a concise
+Markdown change report. Control drift rows link back to Milestone 9 policy/control catalog
+metadata, evidence requirements, and evidence refs.
+
+This is historical comparison only. It does not implement live monitoring, scheduling, alerting,
+automatic remediation, production observability, or a production history database.
+
 ## Current status
 
 **Implemented as of Milestone 5, locally and deterministically.**
@@ -62,6 +77,8 @@ indicator derivation; posture classification; JSON/CSV/Markdown export; and vali
 `scripts/generate_compliance.py` writes reproducible outputs to `outputs/compliance/`.
 As of Milestone 9, `scripts/generate_policy_catalog.py` writes policy/control catalog and
 traceability outputs to `outputs/policy/`.
+As of Milestone 10, `scripts/generate_assurance_history.py` writes explicit snapshot comparison
+and drift outputs to `outputs/assurance/`.
 
 This is not formal regulatory compliance, NHS DSPT certification, UK GDPR certification, MHRA
 approval, ISO certification, live enterprise monitoring, alerting, or production policy

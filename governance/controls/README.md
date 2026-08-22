@@ -99,6 +99,17 @@ row ties together:
 
 The matrix is deterministic and generated from current compliance results, not manually assembled.
 
+## Assurance Drift Linkage
+
+Milestone 10 uses the generated control catalog when building
+`outputs/assurance/control_drift.csv`. Each changed control row carries the implemented control ID,
+related policy ID, control objective, evidence requirement, evidence refs, and reviewer guidance
+from the catalog. Assurance drift therefore traces back to implemented controls and generated
+evidence without duplicating the control definitions.
+
+The assurance-history layer compares explicit local snapshots only. It does not add live policy
+enforcement, scheduled checks, alerting, remediation, or production observability.
+
 ## Control Lifecycle
 
 Adding or changing a control should follow this sequence:
@@ -108,7 +119,8 @@ Adding or changing a control should follow this sequence:
 3. Run `python scripts/generate_compliance.py`.
 4. Run `python scripts/generate_reviewer_bundle.py`.
 5. Run `python scripts/generate_policy_catalog.py`.
-6. Run lint, tests, and repository validation.
+6. Run `python scripts/generate_assurance_history.py`.
+7. Run lint, tests, and repository validation.
 
 Catalog validation is expected to fail if implemented controls and catalog metadata drift apart.
 

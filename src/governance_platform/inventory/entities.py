@@ -127,8 +127,7 @@ class AIModel(BaseModel):
             )
         if self.risk_tier == RiskTier.HIGH and not self.monitoring_required:
             raise ValueError(
-                f"model {self.model_id}: high risk_tier models must have "
-                f"monitoring_required=True"
+                f"model {self.model_id}: high risk_tier models must have monitoring_required=True"
             )
         return self
 

@@ -17,6 +17,8 @@ from typing import Any
 from governance_platform.access import AccessControlService, load_access_state
 from governance_platform.audit import load_audit_log, load_evidence_pack
 from governance_platform.compliance import (
+    load_assurance_comparison,
+    load_assurance_history,
     load_compliance_assessment,
     load_control_catalog,
     load_policy_assurance_summary,
@@ -80,6 +82,16 @@ class ReviewerPolicyState:
     assurance_summary: Any
 
 
+@dataclass(frozen=True)
+class ReviewerAssuranceState:
+    """Loaded assurance-history rows for the reviewer portal."""
+
+    snapshot_rows: tuple[dict[str, Any], ...]
+    control_drift_rows: tuple[dict[str, Any], ...]
+    risk_drift_rows: tuple[dict[str, Any], ...]
+    comparison: Any
+
+
 def _repo_root() -> Path:
     return Path(__file__).resolve().parents[3]
 
@@ -121,6 +133,25 @@ def required_policy_output_paths(outputs_root: str | Path) -> tuple[Path, ...]:
 def missing_policy_output_paths(outputs_root: str | Path) -> tuple[Path, ...]:
     """Return missing policy catalog files under ``outputs_root``."""
     return tuple(path for path in required_policy_output_paths(outputs_root) if not path.is_file())
+
+
+def required_assurance_output_paths(outputs_root: str | Path) -> tuple[Path, ...]:
+    """Canonical assurance-history files the optional portal page expects."""
+    root = Path(outputs_root)
+    return (
+        root / "assurance" / "assurance_snapshots.json",
+        root / "assurance" / "assurance_comparison.json",
+        root / "assurance" / "control_drift.csv",
+        root / "assurance" / "risk_drift.csv",
+        root / "assurance" / "assurance_drift_summary.json",
+    )
+
+
+def missing_assurance_output_paths(outputs_root: str | Path) -> tuple[Path, ...]:
+    """Return missing assurance-history files under ``outputs_root``."""
+    return tuple(
+        path for path in required_assurance_output_paths(outputs_root) if not path.is_file()
+    )
 
 
 def _value(value: Any) -> Any:
@@ -234,6 +265,44 @@ def load_reviewer_policy_state(outputs_root: str | Path | None = None) -> Review
         control_rows=tuple(control.model_dump(mode="json") for control in controls),
         traceability_rows=traceability_rows,
         assurance_summary=summary,
+    )
+
+
+def load_reviewer_assurance_state(
+    outputs_root: str | Path | None = None,
+) -> ReviewerAssuranceState:
+    """Load generated assurance-history outputs for the optional reviewer page."""
+    root = Path(outputs_root) if outputs_root is not None else default_outputs_root()
+    missing = missing_assurance_output_paths(root)
+    if missing:
+        raise MissingGeneratedOutputError(missing)
+
+    history = load_assurance_history(root / "assurance")
+    comparison = load_assurance_comparison(root / "assurance")
+    with (root / "assurance" / "control_drift.csv").open(newline="", encoding="utf-8") as fh:
+        control_rows = tuple(dict(row) for row in csv.DictReader(fh))
+    with (root / "assurance" / "risk_drift.csv").open(newline="", encoding="utf-8") as fh:
+        risk_rows = tuple(dict(row) for row in csv.DictReader(fh))
+
+    return ReviewerAssuranceState(
+        snapshot_rows=tuple(
+            {
+                "snapshot_id": snapshot.snapshot_id,
+                "captured_at": snapshot.captured_at.isoformat(),
+                "assessment_id": snapshot.assessment_id,
+                "posture": snapshot.posture.value,
+                "bounded_risk_score": snapshot.bounded_risk_score,
+                "risk_indicator_count": snapshot.risk_indicator_count,
+                "control_status_counts": "; ".join(
+                    f"{key}={value}" for key, value in snapshot.control_status_counts.items()
+                ),
+                "source_refs": "; ".join(snapshot.source_refs),
+            }
+            for snapshot in history.ordered_snapshots()
+        ),
+        control_drift_rows=control_rows,
+        risk_drift_rows=risk_rows,
+        comparison=comparison,
     )
 
 

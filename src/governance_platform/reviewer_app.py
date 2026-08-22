@@ -31,8 +31,10 @@ from governance_platform.reviewer import (  # noqa: E402
     filter_rows,
     kpi_prefix_rows,
     kpi_value,
+    load_reviewer_assurance_state,
     load_reviewer_policy_state,
     load_reviewer_state,
+    missing_assurance_output_paths,
     missing_policy_output_paths,
     rejection_reason_rows,
     status_counts,
@@ -443,6 +445,64 @@ def _policy_controls_page() -> None:
     _table(trace_rows, empty="No traceability rows match the selected filters.")
 
 
+def _assurance_history_page() -> None:
+    st.header("Assurance History / Drift")
+    missing = missing_assurance_output_paths("outputs")
+    if missing:
+        st.info("Assurance history outputs have not been generated yet.")
+        st.code("python3 scripts/generate_assurance_history.py", language="text")
+        _table(
+            tuple({"missing_path": str(path)} for path in missing),
+            empty="No missing assurance outputs.",
+        )
+        return
+
+    assurance_state = load_reviewer_assurance_state()
+    comparison = assurance_state.comparison
+    _metric_grid(
+        (
+            ("Prior posture", comparison.previous_posture.value),
+            ("Current posture", comparison.current_posture.value),
+            ("Prior risk score", comparison.previous_bounded_risk_score),
+            ("Current risk score", comparison.current_bounded_risk_score),
+            ("Risk delta", comparison.risk_score_delta),
+            ("Changed controls", len(comparison.control_drifts)),
+            ("Risk changes", len(comparison.risk_drifts)),
+            ("Posture change", comparison.posture_change.value),
+        )
+    )
+
+    st.subheader("Snapshots")
+    _table(assurance_state.snapshot_rows, empty="No assurance snapshots found.")
+
+    st.subheader("Changed Controls")
+    drift_type = _select_filter(
+        "Control drift type", unique_values(assurance_state.control_drift_rows, "drift_type")
+    )
+    policy_id = _select_filter(
+        "Policy ID", unique_values(assurance_state.control_drift_rows, "policy_ids")
+    )
+    control_rows = filter_rows(
+        assurance_state.control_drift_rows,
+        equals={"drift_type": drift_type, "policy_ids": policy_id},
+    )
+    _table(control_rows, empty="No control drift rows match the selected filters.")
+
+    st.subheader("Risk Drift")
+    risk_type = _select_filter(
+        "Risk drift type", unique_values(assurance_state.risk_drift_rows, "drift_type")
+    )
+    risk_rows = filter_rows(assurance_state.risk_drift_rows, equals={"drift_type": risk_type})
+    _table(risk_rows, empty="No risk drift rows match the selected filters.")
+
+    st.subheader("Changed Domains")
+    changed_domains = comparison.summary.get("changed_governance_domains", ())
+    _table(
+        tuple({"policy_id": policy_id} for policy_id in changed_domains),
+        empty="No changed governance domains.",
+    )
+
+
 def main() -> None:
     st.set_page_config(page_title="Governance Reviewer Portal", layout="wide")
     st.title("Governance Reviewer Portal")
@@ -464,6 +524,7 @@ def main() -> None:
             "Audit & Evidence",
             "Compliance & Risk",
             "Policy & Controls",
+            "Assurance History / Drift",
         ),
     )
 
@@ -477,8 +538,10 @@ def main() -> None:
         _audit_evidence_page(state)
     elif page == "Compliance & Risk":
         _compliance_risk_page(state)
-    else:
+    elif page == "Policy & Controls":
         _policy_controls_page()
+    else:
+        _assurance_history_page()
 
 
 if __name__ == "__main__":

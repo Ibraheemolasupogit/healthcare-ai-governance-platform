@@ -57,3 +57,12 @@ local policy metadata, a control catalog, control-to-evidence traceability, and 
 policy assurance summary derived from implemented compliance controls and generated evidence refs.
 This is local governance metadata only — not a generic policy DSL, live enforcement, automatic
 remediation, production compliance orchestration, or regulatory certification.
+
+As of Milestone 10, `assurance/` is populated by running
+`python scripts/generate_assurance_history.py` (see the root
+[README's Assurance history and drift outputs section](../README.md#assurance-history-and-drift-outputs)):
+explicit local assurance snapshots, a deterministic snapshot comparison, control drift, risk
+drift, summary metrics, and a reviewer-readable change report. This is local historical
+comparison over synthetic snapshots only — not real-time monitoring, scheduling, alerting,
+automatic remediation, production observability, a production history store, or regulatory
+certification.

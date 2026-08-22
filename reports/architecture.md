@@ -3,8 +3,9 @@
 **Status:** Milestone 1 (Platform Foundation), Milestone 2 (Synthetic Research & AI Inventory),
 Milestone 3 (Access & Research Control Plane), Milestone 4 (Audit & Evidence Plane), Milestone 5
 (Risk & Compliance Monitoring Plane), Milestone 6 (Governance Reporting & Semantic Plane),
-Milestone 7 (Local Governance Reviewer Portal), and Milestone 8 (Reviewer Export & Demo
-Handoff), and Milestone 9 (Policy & Control Catalog). This document describes the target
+Milestone 7 (Local Governance Reviewer Portal), Milestone 8 (Reviewer Export & Demo
+Handoff), Milestone 9 (Policy & Control Catalog), and Milestone 10 (Control Assurance History &
+Drift). This document describes the target
 architecture for the full platform and marks, plane by plane, what exists today versus what is
 designed but not yet built. Nothing described as "Planned" should be treated as available.
 
@@ -116,11 +117,14 @@ compliance posture over time, including drift and violation detection.
   validation helpers. Milestone 9 adds `src/governance_platform/compliance/catalog.py`: a local
   policy/control catalog and traceability layer that derives from the implemented control
   definitions, maps controls to local policies, evidence requirements, implementation refs,
-  current compliance results, and generated evidence refs, and exports `outputs/policy/`. Still
-  not implemented: generic policy DSL/OPA integration, regulatory interpretation, certification,
-  live enterprise monitoring, alerting, automatic remediation, production compliance
-  orchestration, predictive risk modelling, model-approval automation, or responsible-AI workflow
-  automation.
+  current compliance results, and generated evidence refs, and exports `outputs/policy/`.
+  Milestone 10 adds `src/governance_platform/compliance/assurance.py`: explicit local assurance
+  snapshots, a controlled synthetic comparison scenario, control/risk/posture drift classification,
+  and reviewer-readable outputs under `outputs/assurance/`. Still not implemented: generic policy
+  DSL/OPA integration, regulatory interpretation, certification, live enterprise monitoring,
+  scheduling, alerting, automatic remediation, production observability, production history
+  storage, production compliance orchestration, predictive risk modelling, model-approval
+  automation, or responsible-AI workflow automation.
 
 ### 6. Reporting plane
 
@@ -138,7 +142,9 @@ compliance officers, research leadership — via Fabric and Power BI.
   project/request/grant drill-through over the generated outputs. Milestone 8 extends that local
   reviewer layer with deterministic briefing exports, saved reviewer views, an evidence index,
   and a demo smoke/runbook handoff under `outputs/reviewer/` and `docs/demo/`. Milestone 9 adds a
-  read-only Policy & Controls reviewer page when generated `outputs/policy/` files exist. The
+  read-only Policy & Controls reviewer page when generated `outputs/policy/` files exist.
+  Milestone 10 adds a read-only Assurance History / Drift reviewer page when generated
+  `outputs/assurance/` files exist. The
   future Fabric semantic model and dashboard designs are specified in
   [`fabric/semantic_model/README.md`](../fabric/semantic_model/README.md) and
   [`fabric/dashboards/README.md`](../fabric/dashboards/README.md), but no Fabric workspace,
@@ -232,8 +238,10 @@ every other plane deploys onto — it doesn't produce governance data itself.
    deterministic evaluation (`src/governance_platform/compliance/`) over explicitly supplied
    synthetic state and timestamps. It produces compliance findings, bounded risk indicators, and a
    governance posture. As of Milestone 9, the same implemented controls are cataloged and traced
-   to evidence requirements and current evidence refs; this is not a live monitoring service,
-   generic policy engine, or certification engine.
+   to evidence requirements and current evidence refs. As of Milestone 10, explicit assurance
+   snapshots compare that state to a controlled synthetic variant for control/risk/posture drift;
+   this is not a live monitoring service, scheduled evaluation, generic policy engine, or
+   certification engine.
 5. The **reporting plane** aggregates inventory, access, audit/evidence, compliance, and risk
    state into reporting-ready KPIs and reviewer/executive outputs. As of Milestone 6, this exists
    locally in `src/governance_platform/reporting/` and `outputs/reporting/`. As of Milestone 7,
@@ -242,7 +250,8 @@ every other plane deploys onto — it doesn't produce governance data itself.
    index, and demo handoff checks are generated locally from the same outputs; Fabric/Power BI
    dashboards, authentication, production hosting, enterprise monitoring, alerting, and live
    refresh remain future concerns. As of Milestone 9, reviewers can also inspect generated
-   policy/control catalog and traceability outputs locally.
+   policy/control catalog and traceability outputs locally. As of Milestone 10, reviewers can
+   inspect generated assurance-history drift outputs locally.
 6. All of the above runs on infrastructure provisioned and operated by the **engineering /
    infrastructure plane** — currently a local Python package, a dev container, and CI; Snowflake
    and Fabric are documented intentions, not live systems.

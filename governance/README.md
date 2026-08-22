@@ -38,8 +38,11 @@ checks. These are local handoff artifacts only, not production workflow automati
 certification. As of Milestone 9, [`controls/`](controls/) documents the local policy/control
 catalog, ownership, evidence requirements, traceability approach, lifecycle, reviewer
 interpretation, and limitations over the implemented compliance controls; it is not a generic
-policy engine or live enforcement system. See each document's "Current status" section for exactly
-what that does and does not cover.
+policy engine or live enforcement system. As of Milestone 10,
+`src/governance_platform/compliance/assurance.py` adds explicit local assurance snapshots and
+deterministic drift comparison over compliance/catalog outputs; it is not live monitoring,
+scheduling, alerting, remediation, or a production history store. See each document's "Current
+status" section for exactly what that does and does not cover.
 
 ## Domains
 
