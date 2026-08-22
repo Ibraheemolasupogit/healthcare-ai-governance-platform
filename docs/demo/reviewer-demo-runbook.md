@@ -1,7 +1,7 @@
 # Reviewer Demo Runbook
 
 This runbook supports a local reviewer walkthrough of the synthetic healthcare AI governance
-platform through Milestone 12. It is for demonstration and review only.
+platform through Milestone 13. It is for demonstration and review only.
 
 ## 1. Environment Setup
 
@@ -53,6 +53,8 @@ python scripts/generate_policy_catalog.py
 python scripts/generate_assurance_history.py
 python scripts/generate_assurance_pack.py
 python scripts/generate_review_readiness.py
+python scripts/generate_offline_archive.py
+python scripts/verify_offline_archive.py
 ```
 
 Generated files are written to `outputs/reviewer/`:
@@ -102,6 +104,10 @@ Review-readiness files are written to `outputs/readiness/`:
 The blank reviewer notes template is available at
 `docs/demo/reviewer-walkthrough-template.md`. It is not a completed review, approval, sign-off,
 production acceptance, or certification record.
+
+The offline handoff guide is generated at `outputs/archive/offline_handoff_guide.md`. Verify the
+manifest with `python scripts/verify_offline_archive.py`; this checks exact-byte SHA-256 equality
+for selected files and does not establish authenticity, approval, certification, or deployment.
 
 ## 5. Start The Streamlit Portal
 

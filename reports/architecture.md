@@ -10,6 +10,12 @@ Demo Readiness). This document describes the target architecture for the full pl
 plane by plane, what exists today versus what is designed but not yet built. Nothing described as
 "Planned" should be treated as available.
 
+Milestone 13 adds an offline assurance handoff layer in
+`src/governance_platform/reviewer/archive.py`. It inventories selected canonical outputs and
+reviewer documentation with deterministic SHA-256 checksums and a read-only verifier. It does not
+copy governance datasets, sign artifacts, provide external attestation, or imply approval,
+certification, authenticity, or production deployment.
+
 **Data statement:** the platform is designed to operate on synthetic data only. No real patient
 data, no production Snowflake account, no Fabric tenant, and no live cloud infrastructure exist
 behind this repository.

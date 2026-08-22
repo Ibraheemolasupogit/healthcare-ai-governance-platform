@@ -49,6 +49,10 @@ automation, notifications, remediation, or a new governance evaluation layer. As
 completeness, demo readiness, and claim boundaries for local synthetic review; it does not create
 human review, governance-board approval, production acceptance, or certification. See each
 document's "Current status" section for exactly what that does and does not cover.
+As of Milestone 13, `src/governance_platform/reviewer/archive.py` provides a deterministic offline
+manifest and SHA-256 verification layer over selected reviewer artifacts. It proves byte equality
+with the manifest only; it does not provide signing, external attestation, authenticity, approval,
+or certification.
 
 ## Domains
 

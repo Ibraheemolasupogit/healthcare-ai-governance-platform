@@ -1,5 +1,20 @@
 """Local reviewer-portal data helpers."""
 
+from governance_platform.reviewer.archive import (
+    ARCHIVE_OUTPUT_FILENAMES,
+    ArchiveArtifact,
+    ArchiveManifest,
+    ArchiveValidationResult,
+    ArchiveValidationStatus,
+    archive_artifact_specs,
+    build_archive_manifest,
+    export_archive_bundle,
+    load_archive_manifest,
+    load_archive_validation,
+    render_offline_handoff_guide,
+    validate_archive_manifest,
+    verify_archive,
+)
 from governance_platform.reviewer.assurance_pack import (
     ASSURANCE_PACK_OUTPUT_FILENAMES,
     AssuranceReviewPack,
@@ -91,6 +106,7 @@ from governance_platform.reviewer.readiness import (
 )
 
 __all__ = [
+    "ARCHIVE_OUTPUT_FILENAMES",
     "ASSURANCE_PACK_OUTPUT_FILENAMES",
     "READINESS_OUTPUT_FILENAMES",
     "AssuranceReviewPack",
@@ -99,6 +115,10 @@ __all__ = [
     "AcceptanceCriterion",
     "AcceptanceResult",
     "AcceptanceStatus",
+    "ArchiveArtifact",
+    "ArchiveManifest",
+    "ArchiveValidationResult",
+    "ArchiveValidationStatus",
     "ArtifactCompletenessResult",
     "DemoReadinessResult",
     "EvidenceIndexEntry",
@@ -118,6 +138,8 @@ __all__ = [
     "ReviewReadinessBundle",
     "ReviewReadinessStatus",
     "build_acceptance_criteria",
+    "archive_artifact_specs",
+    "build_archive_manifest",
     "build_assurance_evidence_map",
     "build_assurance_review_pack",
     "build_artifact_completeness",
@@ -137,6 +159,7 @@ __all__ = [
     "drillthrough_by_request",
     "evidence_reference_rows",
     "export_assurance_review_pack_bundle",
+    "export_archive_bundle",
     "export_review_readiness_bundle",
     "export_reviewer_bundle",
     "filter_rows",
@@ -145,6 +168,8 @@ __all__ = [
     "kpi_prefix_rows",
     "kpi_value",
     "load_assurance_review_pack",
+    "load_archive_manifest",
+    "load_archive_validation",
     "load_acceptance_checklist",
     "load_demo_readiness",
     "load_reviewer_briefing",
@@ -161,6 +186,7 @@ __all__ = [
     "missing_readiness_source_paths",
     "rejection_reason_rows",
     "render_assurance_review_pack_markdown",
+    "render_offline_handoff_guide",
     "render_review_readiness_report",
     "required_output_paths",
     "required_readiness_output_paths",
@@ -170,6 +196,8 @@ __all__ = [
     "unresolved_evidence_refs",
     "unique_values",
     "validate_assurance_review_pack",
+    "validate_archive_manifest",
     "validate_review_readiness_outputs",
     "validate_reviewer_bundle",
+    "verify_archive",
 ]

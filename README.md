@@ -19,7 +19,8 @@ Research Control Plane), Milestone 4 (Audit & Evidence Plane), Milestone 5 (Risk
 Compliance Monitoring Plane), Milestone 6 (Governance Reporting & Semantic Plane), Milestone 7
 (Local Governance Reviewer Portal), Milestone 8 (Reviewer Export & Demo Handoff), Milestone 9
 (Policy & Control Catalog), Milestone 10 (Control Assurance History & Drift), Milestone 11
-(Integrated Assurance Review Pack), and Milestone 12 (Reviewer Acceptance & Demo Readiness).**
+(Integrated Assurance Review Pack), Milestone 12 (Reviewer Acceptance & Demo Readiness), and
+Milestone 13 (Offline Assurance Archive & Verification Manifest).**
 Milestone 2 adds a typed, validated metadata/inventory plane and a deterministic synthetic
 dataset/model/research portfolio generated from it. Milestone 3 adds a **local governance
 simulation** of the access request → decision → grant → revocation/expiry workflow, evaluated
@@ -36,7 +37,9 @@ local assurance snapshots and deterministic control/risk/posture drift reporting
 adds a concise integrated assurance review pack that cross-links briefing, policy/control,
 evidence, and drift outputs for reviewer handoff. Milestone 12 adds deterministic
 review-readiness criteria, artifact completeness checks, demo-readiness evidence, and a blank
-reviewer walkthrough notes template. No model approval automation, responsible AI workflow
+reviewer walkthrough notes template. Milestone 13 adds a deterministic offline artifact manifest,
+SHA-256 verification, archive completeness validation, and an independent verification guide. No
+model approval automation, responsible AI workflow
 automation, live identity/RBAC/SIEM enforcement, authentication, production hosting, scheduling,
 alerting, remediation, formal sign-off, production acceptance, or Fabric/Power BI deployment has
 been implemented yet. See [Implemented vs. Planned](#implemented-vs-planned) below before assuming
@@ -92,6 +95,7 @@ BI, Docker, Terraform, GitHub Actions, and policy-as-code tooling.
 │   ├── assurance/              # Generated assurance-history drift outputs (gitignored)
 │   ├── assurance_pack/         # Generated integrated assurance review pack (gitignored)
 │   └── readiness/              # Generated reviewer readiness evidence (gitignored)
+│   └── archive/                 # Generated offline manifest/checksums/guide (gitignored)
 ├── reports/
 │   └── architecture.md         # Full architecture write-up + diagram
 ├── docs/
@@ -107,6 +111,8 @@ BI, Docker, Terraform, GitHub Actions, and policy-as-code tooling.
 │   ├── generate_assurance_history.py # Build assurance snapshots and drift report
 │   ├── generate_assurance_pack.py # Build integrated assurance review pack
 │   ├── generate_review_readiness.py # Build review-readiness checklist/report
+│   ├── generate_offline_archive.py # Build deterministic archive manifest/checksums
+│   ├── verify_offline_archive.py # Recalculate archive checksums read-only
 │   └── smoke_reviewer_demo.py  # Validate local reviewer demo readiness
 ├── tests/                      # Foundation + inventory + access + audit + compliance + reporting + reviewer
 └── .github/workflows/          # CI: install, lint, test, validate
@@ -142,6 +148,26 @@ BI, Docker, Terraform, GitHub Actions, and policy-as-code tooling.
 This layer demonstrates that local synthetic artifacts are available for review. It does not
 create human review, organisational approval, governance-board sign-off, production acceptance,
 or regulatory certification.
+
+### Implemented (Milestone 13 — Offline Assurance Archive & Verification Manifest)
+
+- A typed immutable archive layer in `src/governance_platform/reviewer/archive.py` selecting a
+  restrained reviewer-facing set of canonical outputs and documentation with safe repository-
+  relative paths
+- Deterministic `outputs/archive/` manifest, CSV inventory, exact-byte SHA-256 checksum list,
+  validation result, and concise offline verification guide
+- `scripts/generate_offline_archive.py`, which builds, exports, reloads, and validates the
+  manifest without duplicating governance logic
+- `scripts/verify_offline_archive.py`, a read-only verifier that returns non-zero for missing
+  files, unsafe paths, duplicates, or checksum mismatches
+- pytest coverage for path safety, stable ordering, checksum mismatch detection, missing required
+  artifacts, duplicate detection, manifest round-tripping, deterministic export, and claim
+  boundaries
+
+This is an offline integrity and handoff layer over local synthetic artifacts. Matching checksums
+do not prove authenticity, correctness, regulatory approval, external certification, human
+approval, production deployment, or production acceptance. Digital signing, external attestation,
+remote storage, and formal approval remain planned.
 
 ### Implemented (Milestone 11 — Integrated Assurance Review Pack)
 
@@ -563,6 +589,10 @@ python scripts/generate_assurance_pack.py
 
 # Build review-readiness checklist and demo evidence (Milestone 12):
 python scripts/generate_review_readiness.py
+
+# Build and verify offline assurance manifest (Milestone 13):
+python scripts/generate_offline_archive.py
+python scripts/verify_offline_archive.py
 
 # Smoke-check local reviewer demo readiness (Milestones 8–12):
 python scripts/smoke_reviewer_demo.py

@@ -83,3 +83,10 @@ a deterministic acceptance checklist, semantic artifact completeness evidence, d
 result, and concise review-readiness report. This is local review-readiness evidence only — not
 human review, organisational approval, governance-board sign-off, production acceptance, or
 regulatory certification.
+
+As of Milestone 13, `archive/` is populated by running
+`python scripts/generate_offline_archive.py`: a deterministic inventory of selected reviewer-facing
+artifacts, exact-byte SHA-256 checksums, archive validation, and an offline verification guide.
+`python scripts/verify_offline_archive.py` recalculates the hashes without regenerating governance
+state. This proves file integrity against the manifest only; it is not a signature, attestation,
+approval, certification, production artifact registry, or deployment package.
