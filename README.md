@@ -17,7 +17,8 @@ The platform is being built in milestones. **This repository currently contains 
 (Platform Foundation), Milestone 2 (Synthetic Research & AI Inventory), Milestone 3 (Access &
 Research Control Plane), Milestone 4 (Audit & Evidence Plane), Milestone 5 (Risk &
 Compliance Monitoring Plane), Milestone 6 (Governance Reporting & Semantic Plane), Milestone 7
-(Local Governance Reviewer Portal), and Milestone 8 (Reviewer Export & Demo Handoff).**
+(Local Governance Reviewer Portal), Milestone 8 (Reviewer Export & Demo Handoff), and Milestone 9
+(Policy & Control Catalog).**
 Milestone 2 adds a typed, validated metadata/inventory plane and a deterministic synthetic
 dataset/model/research portfolio generated from it. Milestone 3 adds a **local governance
 simulation** of the access request → decision → grant → revocation/expiry workflow, evaluated
@@ -28,10 +29,11 @@ and a governance posture over that same local state. Milestone 6 adds reporting-
 contracts, deterministic governance KPIs, and an executive summary over existing outputs.
 Milestone 7 adds a local Streamlit reviewer portal over those generated outputs. Milestone 8 adds
 deterministic reviewer briefing exports, saved reviewer views, an evidence index, and a local demo
-runbook/smoke check. No model approval automation, responsible AI workflow automation, live
-identity/RBAC/SIEM enforcement, authentication, production hosting, or Fabric/Power BI deployment
-has been implemented yet. See [Implemented vs. Planned](#implemented-vs-planned) below before
-assuming any capability exists.
+runbook/smoke check. Milestone 9 adds a deterministic policy/control catalog and
+control-to-evidence traceability matrix over the implemented controls. No model approval
+automation, responsible AI workflow automation, live identity/RBAC/SIEM enforcement,
+authentication, production hosting, or Fabric/Power BI deployment has been implemented yet. See
+[Implemented vs. Planned](#implemented-vs-planned) below before assuming any capability exists.
 
 ## Platform intent
 
@@ -59,7 +61,7 @@ BI, Docker, Terraform, GitHub Actions, and policy-as-code tooling.
 │   ├── inventory/              # Metadata/inventory plane: entities, generation, validation, I/O
 │   ├── access/                 # Access/research-control plane: request/decision/grant simulation
 │   ├── audit/                  # Audit/evidence plane: append-only log + evidence-pack generation
-│   ├── compliance/             # Risk/compliance plane: controls, findings, posture outputs
+│   ├── compliance/             # Risk/compliance plane: controls, catalog, findings, posture
 │   ├── reporting/              # Reporting plane: deterministic KPIs and snapshots
 │   ├── reviewer/               # Reviewer portal + export/filter/drill-through helpers
 │   └── reviewer_app.py         # Local Streamlit reviewer portal
@@ -78,7 +80,8 @@ BI, Docker, Terraform, GitHub Actions, and policy-as-code tooling.
 │   ├── evidence/               # Generated audit log + evidence pack (gitignored)
 │   ├── compliance/             # Generated control/risk/posture outputs (gitignored)
 │   ├── reporting/              # Generated reporting KPIs/snapshot (gitignored)
-│   └── reviewer/               # Generated reviewer briefing bundle/views (gitignored)
+│   ├── reviewer/               # Generated reviewer briefing bundle/views (gitignored)
+│   └── policy/                 # Generated policy/control catalog outputs (gitignored)
 ├── reports/
 │   └── architecture.md         # Full architecture write-up + diagram
 ├── docs/
@@ -90,12 +93,45 @@ BI, Docker, Terraform, GitHub Actions, and policy-as-code tooling.
 │   ├── generate_compliance.py  # Evaluate controls and export compliance posture
 │   ├── generate_reporting.py   # Build reporting KPIs and executive summary
 │   ├── generate_reviewer_bundle.py # Build reviewer briefing bundle/views
+│   ├── generate_policy_catalog.py # Build policy/control catalog and traceability matrix
 │   └── smoke_reviewer_demo.py  # Validate local reviewer demo readiness
 ├── tests/                      # Foundation + inventory + access + audit + compliance + reporting + reviewer
 └── .github/workflows/          # CI: install, lint, test, validate
 ```
 
 ## Implemented vs. Planned
+
+### Implemented (Milestone 9 — Policy & Control Catalog)
+
+- A typed immutable policy/control catalog in `src/governance_platform/compliance/catalog.py`
+  built from the existing `default_control_definitions()` source of truth; it does not duplicate
+  or reimplement control evaluation logic
+- Local policy metadata for inventory, dataset, model, research, access, audit completeness,
+  evidence completeness, responsible AI readiness, and operational governance domains
+- Control catalog entries with objectives, severity, applies-to entities, implementation refs,
+  deterministic evaluation type, evidence requirements, expected evidence-reference patterns,
+  failure effects, reviewer guidance, policy IDs, and enabled state
+- Coverage validation for implemented-control/catalog synchronization, policy/control references,
+  evidence requirement ownership, enabled-control evidence coverage, duplicate IDs, assessment
+  coverage, source-plane validity, and known evidence-reference resolution
+- A deterministic control-to-evidence traceability matrix tying policies, controls,
+  implementation refs, evidence requirements, actual evidence refs, current evaluation status,
+  finding codes, and reviewer locations
+- `scripts/generate_policy_catalog.py`, which loads existing compliance/reviewer outputs, builds
+  and validates the catalog bundle, exports `outputs/policy/`, and reloads canonical outputs
+- A read-only **Policy & Controls** page in the local reviewer portal that shows generated
+  policies, controls, current status, implementation references, evidence refs, and traceability
+  rows when `outputs/policy/` exists
+- Governance documentation under `governance/controls/` describing the catalog, ownership,
+  objectives, evidence requirements, traceability, lifecycle, reviewer interpretation, and
+  limitations
+- pytest coverage for model validation, synchronization, evidence requirements, policy/control
+  references, traceability, deterministic ordering/export, JSON round trip, missing/orphan
+  detection, reviewer policy loading, and synthetic/local claim safeguards
+
+This catalog is local governance metadata for a portfolio repository. It is not a generic policy
+DSL, OPA/Rego integration, live policy enforcement platform, automatic remediation system,
+production compliance orchestrator, or regulatory interpretation/certification engine.
 
 ### Implemented (Milestone 8 — Reviewer Export & Demo Handoff)
 
@@ -361,21 +397,25 @@ automation, or any Snowflake connectivity (see [Explicit non-goals](#explicit-no
 - Authentication, role-based application access, and production hosting for the local reviewer
   portal
 - Any live Terraform deployment or cloud provisioning
+- Generic policy DSL / OPA/Rego integration, live policy enforcement, automatic remediation,
+  or production compliance orchestration
 
 Do not treat anything in this list as available — it is documented here precisely so it isn't
 assumed to exist.
 
 ### Explicit non-goals
 
-Milestones 2–7 are metadata, inventory, local access-control, audit/evidence, compliance,
-reporting, and reviewer-portal **simulations** only. They do not implement: Snowflake connectivity or deployed schemas, live
+Milestones 2–9 are metadata, inventory, local access-control, audit/evidence, compliance,
+reporting, reviewer-portal, reviewer-export, and policy-catalog **simulations** only. They do not
+implement: Snowflake connectivity or deployed schemas, live
 Snowflake RBAC or user/role provisioning, Entra ID integration, authentication, real user accounts,
 cloud identity, live Snowflake query-history/audit-log ingestion, a real SIEM, Microsoft Purview
 integration, Entra ID audit-log ingestion, real-time streaming, production observability, an
 incident-response engine, a generic policy-as-code engine, approval-workflow automation,
 responsible-AI workflow automation, model approval automation, Fabric semantic models, Power BI
 dashboards, Terraform deployment, Salesforce workflows, regulatory certification, live monitoring,
-alerting, production hosting, or production access/audit/compliance enforcement of any kind. These
+alerting, production hosting, automatic remediation, production compliance orchestration, or
+production access/audit/compliance enforcement of any kind. These
 remain [Planned](#planned-later-milestones--not-implemented-in-this-repository-yet) above.
 
 ## Getting started (local development)
@@ -409,6 +449,9 @@ python scripts/generate_reporting.py
 
 # Build reviewer briefing bundle, evidence index, and saved views (Milestone 8):
 python scripts/generate_reviewer_bundle.py
+
+# Build policy/control catalog and traceability matrix (Milestone 9):
+python scripts/generate_policy_catalog.py
 
 # Smoke-check local reviewer demo readiness (Milestone 8):
 python scripts/smoke_reviewer_demo.py
@@ -760,6 +803,9 @@ Implemented sections:
   request, and grant, plus evidence-pack completeness summary.
 - **Compliance & Risk** — controls, pass rate, findings by severity/domain, risk indicators,
   bounded risk score, posture, and evidence-reference drill-through.
+- **Policy & Controls** — generated local policies, cataloged implemented controls, current
+  status counts, implementation references, evidence requirements, and traceability rows when
+  `outputs/policy/` has been generated.
 
 The app fails clearly when required generated outputs are missing and tells the reviewer which
 generation commands to run. It has no write/edit workflows, approval actions, authentication,
@@ -798,6 +844,30 @@ entrypoint instead.
 For a step-by-step reviewer walkthrough, see
 [`docs/demo/reviewer-demo-runbook.md`](docs/demo/reviewer-demo-runbook.md).
 
+## Policy and control catalog outputs
+
+`python scripts/generate_policy_catalog.py` writes a deterministic policy/control catalog to
+`outputs/policy/` after compliance, reporting, and reviewer outputs have been generated:
+
+```text
+outputs/policy/policy_catalog.json                  # canonical local policy metadata
+outputs/policy/control_catalog.json                 # canonical control catalog metadata
+outputs/policy/control_catalog.csv                  # reviewer-friendly control catalog
+outputs/policy/control_evidence_traceability.csv    # control-to-evidence traceability matrix
+outputs/policy/policy_assurance_summary.json        # aggregate catalog coverage/status
+outputs/policy/policy_assurance_summary.md          # reviewer-readable assurance summary
+```
+
+The catalog derives from `default_control_definitions()` and current compliance outputs. It maps
+each implemented control to a local policy, implementation reference, evidence requirements,
+actual evidence references, current evaluation status, finding code, and reviewer location. It
+validates that the catalog remains synchronized with implemented controls and that current
+evidence refs resolve in the generated evidence index.
+
+This is explicit governance metadata and reviewer traceability over local synthetic outputs. It is
+not a generic policy DSL, OPA/Rego integration, live policy enforcement, automatic remediation,
+production compliance orchestration, or regulatory interpretation/certification engine.
+
 ## Architecture and design records
 
 - [`reports/architecture.md`](reports/architecture.md) — the seven-plane architecture and diagram
@@ -816,6 +886,9 @@ For a step-by-step reviewer walkthrough, see
 - [`src/governance_platform/reviewer/`](src/governance_platform/reviewer/) and
   [`src/governance_platform/reviewer_app.py`](src/governance_platform/reviewer_app.py) — the
   Milestone 7 local reviewer portal and Milestone 8 reviewer handoff exports
+- [`src/governance_platform/compliance/catalog.py`](src/governance_platform/compliance/catalog.py)
+  and [`governance/controls/`](governance/controls/) — the Milestone 9 policy/control catalog and
+  traceability documentation
 - [`governance/`](governance/) — operating-model documentation per governance domain
 - [`infrastructure/snowflake/`](infrastructure/snowflake/) — intended Snowflake governance
   responsibilities (no live account)

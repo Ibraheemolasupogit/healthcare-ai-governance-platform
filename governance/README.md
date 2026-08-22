@@ -35,8 +35,11 @@ read-only review pages over generated outputs. As of Milestone 8,
 [`src/governance_platform/reviewer/`](../src/governance_platform/reviewer/) also provides
 deterministic reviewer briefing exports, saved reviewer views, an evidence index, and demo smoke
 checks. These are local handoff artifacts only, not production workflow automation or regulatory
-certification. See each document's "Current status" section for exactly what that does and does
-not cover.
+certification. As of Milestone 9, [`controls/`](controls/) documents the local policy/control
+catalog, ownership, evidence requirements, traceability approach, lifecycle, reviewer
+interpretation, and limitations over the implemented compliance controls; it is not a generic
+policy engine or live enforcement system. See each document's "Current status" section for exactly
+what that does and does not cover.
 
 ## Domains
 
@@ -49,6 +52,7 @@ not cover.
 | [audit_evidence.md](audit_evidence.md) | Audit trail and evidence generation | Audit / evidence |
 | [responsible_ai.md](responsible_ai.md) | Responsible AI review criteria | Risk / compliance |
 | [compliance_monitoring.md](compliance_monitoring.md) | Ongoing compliance and risk monitoring | Risk / compliance |
+| [controls/](controls/) | Policy/control catalog and traceability | Risk / compliance |
 
 ## Document structure
 

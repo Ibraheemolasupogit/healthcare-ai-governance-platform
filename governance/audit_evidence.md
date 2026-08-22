@@ -34,6 +34,15 @@ those domains, not a producer of governance decisions itself.
 - Generated evidence artifacts land in [`outputs/`](../outputs/), which is gitignored — evidence
   is reproducible from source data, not committed to version control.
 
+## Traceability relationship
+
+As of Milestone 9, audit and evidence outputs are referenced by the local policy/control catalog's
+traceability matrix. Controls that require lifecycle events, correlation chains, duplicate audit ID
+checks, and evidence-reference resolution point back to generated audit/evidence identifiers such
+as `audit_log:audit_events`, `audit_event:AE-0033`, and `evidence_pack:EVP-0001`. This adds
+reviewer traceability over existing generated evidence; it does not introduce live audit ingestion
+or production audit enforcement.
+
 ## Current status
 
 **Partially implemented (Milestone 4), as a local, deterministic governance simulation.**
@@ -50,6 +59,8 @@ there is no audit-event *ingestion* from a real system: no Snowflake query-histo
 collection, no SIEM, no Microsoft Purview or Entra ID audit-log integration, and no real-time
 streaming. Generated evidence artifacts land in `outputs/evidence/`, which is gitignored, per the
 paragraph above.
+As of Milestone 9, selected audit/evidence references also appear in
+`outputs/policy/control_evidence_traceability.csv` for reviewer traceability.
 
 ## Related ADRs / planes
 

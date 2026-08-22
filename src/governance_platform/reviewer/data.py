@@ -7,6 +7,7 @@ drill-through behavior can be tested without exercising UI internals.
 
 from __future__ import annotations
 
+import csv
 from collections import Counter
 from dataclasses import dataclass
 from datetime import date, datetime
@@ -15,7 +16,12 @@ from typing import Any
 
 from governance_platform.access import AccessControlService, load_access_state
 from governance_platform.audit import load_audit_log, load_evidence_pack
-from governance_platform.compliance import load_compliance_assessment
+from governance_platform.compliance import (
+    load_compliance_assessment,
+    load_control_catalog,
+    load_policy_assurance_summary,
+    load_policy_catalog,
+)
 from governance_platform.inventory import load_portfolio
 from governance_platform.reporting import GovernanceKPI, ReportingSnapshot, load_reporting_snapshot
 
@@ -64,6 +70,16 @@ class ReviewerState:
     risk_indicator_rows: tuple[dict[str, Any], ...]
 
 
+@dataclass(frozen=True)
+class ReviewerPolicyState:
+    """Loaded policy/control catalog rows for the reviewer portal."""
+
+    policy_rows: tuple[dict[str, Any], ...]
+    control_rows: tuple[dict[str, Any], ...]
+    traceability_rows: tuple[dict[str, Any], ...]
+    assurance_summary: Any
+
+
 def _repo_root() -> Path:
     return Path(__file__).resolve().parents[3]
 
@@ -89,6 +105,22 @@ def required_output_paths(outputs_root: str | Path) -> tuple[Path, ...]:
 def missing_output_paths(outputs_root: str | Path) -> tuple[Path, ...]:
     """Return required generated files absent from ``outputs_root``."""
     return tuple(path for path in required_output_paths(outputs_root) if not path.is_file())
+
+
+def required_policy_output_paths(outputs_root: str | Path) -> tuple[Path, ...]:
+    """Canonical policy catalog files the optional portal page expects."""
+    root = Path(outputs_root)
+    return (
+        root / "policy" / "policy_catalog.json",
+        root / "policy" / "control_catalog.json",
+        root / "policy" / "control_evidence_traceability.csv",
+        root / "policy" / "policy_assurance_summary.json",
+    )
+
+
+def missing_policy_output_paths(outputs_root: str | Path) -> tuple[Path, ...]:
+    """Return missing policy catalog files under ``outputs_root``."""
+    return tuple(path for path in required_policy_output_paths(outputs_root) if not path.is_file())
 
 
 def _value(value: Any) -> Any:
@@ -180,6 +212,28 @@ def load_reviewer_state(outputs_root: str | Path | None = None) -> ReviewerState
         risk_indicator_rows=tuple(
             _model_row(item) for item in compliance_assessment.risk_indicators
         ),
+    )
+
+
+def load_reviewer_policy_state(outputs_root: str | Path | None = None) -> ReviewerPolicyState:
+    """Load generated policy catalog outputs for the optional reviewer page."""
+    root = Path(outputs_root) if outputs_root is not None else default_outputs_root()
+    missing = missing_policy_output_paths(root)
+    if missing:
+        raise MissingGeneratedOutputError(missing)
+
+    policies = load_policy_catalog(root / "policy")
+    controls = load_control_catalog(root / "policy")
+    summary = load_policy_assurance_summary(root / "policy")
+    traceability_path = root / "policy" / "control_evidence_traceability.csv"
+    with traceability_path.open(newline="", encoding="utf-8") as fh:
+        traceability_rows = tuple(dict(row) for row in csv.DictReader(fh))
+
+    return ReviewerPolicyState(
+        policy_rows=tuple(policy.model_dump(mode="json") for policy in policies),
+        control_rows=tuple(control.model_dump(mode="json") for control in controls),
+        traceability_rows=traceability_rows,
+        assurance_summary=summary,
     )
 
 

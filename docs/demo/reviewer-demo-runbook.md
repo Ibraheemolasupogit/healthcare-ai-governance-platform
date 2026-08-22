@@ -1,7 +1,7 @@
 # Reviewer Demo Runbook
 
 This runbook supports a local reviewer walkthrough of the synthetic healthcare AI governance
-platform through Milestone 8. It is for demonstration and review only.
+platform through Milestone 9. It is for demonstration and review only.
 
 ## 1. Environment Setup
 
@@ -43,10 +43,11 @@ Expected deterministic anchors:
 
 ## 4. Reviewer Export Generation
 
-Build the Milestone 8 reviewer handoff bundle.
+Build the Milestone 8 reviewer handoff bundle and Milestone 9 policy/control catalog.
 
 ```bash
 python scripts/generate_reviewer_bundle.py
+python scripts/generate_policy_catalog.py
 ```
 
 Generated files are written to `outputs/reviewer/`:
@@ -58,6 +59,15 @@ Generated files are written to `outputs/reviewer/`:
 - `reviewer_evidence_index.csv`
 - `reviewer_filtered_views.csv`
 - `reviewer_filtered_views.md`
+
+Policy catalog files are written to `outputs/policy/`:
+
+- `policy_catalog.json`
+- `control_catalog.json`
+- `control_catalog.csv`
+- `control_evidence_traceability.csv`
+- `policy_assurance_summary.json`
+- `policy_assurance_summary.md`
 
 ## 5. Start The Streamlit Portal
 
@@ -77,7 +87,8 @@ Open the local URL printed by Streamlit. The app is local only and read only.
 6. Audit correlation chain
 7. Compliance finding
 8. Evidence reference
-9. Reviewer briefing export
+9. Policy/control traceability
+10. Reviewer briefing export
 
 ## 7. What To Show On Each Portal Page
 
@@ -99,6 +110,10 @@ decision, grant, and lifecycle evidence chain for the approved population-health
 **Compliance & Risk:** show warning control `CR-0034` for high-risk model `MD-0003`, risk
 indicator `RI-0001`, and evidence reference `model:MD-0003`.
 
+**Policy & Controls:** show local policy count `9`, implemented control count `26`, current
+warning count `1`, and traceability rows for control `CTRL-0014`. Use the control table to show
+implementation references and reviewer guidance.
+
 ## 8. Evidence IDs And Drill-through Paths
 
 Use these deterministic IDs during the review:
@@ -113,6 +128,9 @@ Use these deterministic IDs during the review:
 - `RI-0001` - bounded risk indicator derived from `CR-0034`
 - `model:MD-0003` - evidence reference for the compliance warning
 - `evidence_pack:EVP-0001` - generated reviewer-readable evidence pack
+- `POL-0008` - Responsible AI Readiness Policy
+- `CTRL-0014` - cataloged high-risk model readiness control
+- `ER-CTRL-0014-01` - evidence requirement for `CTRL-0014`
 
 Suggested drill-through path:
 
@@ -120,6 +138,7 @@ Suggested drill-through path:
 Executive posture -> Data & Model Governance filter risk_tier=high -> MD-0003
 -> Research & Access Governance request AR-0002 -> Audit & Evidence project RP-0001
 -> Compliance & Risk result CR-0034 -> Evidence reference model:MD-0003
+-> Policy & Controls filter CTRL-0014 -> outputs/policy/policy_assurance_summary.md
 -> outputs/reviewer/reviewer_briefing.md
 ```
 
@@ -151,6 +170,7 @@ This demo is local, deterministic, read-only, and synthetic-data-only. It does n
 - Terraform deployment
 - Salesforce integration
 - regulatory certification
+- generic policy DSL, live policy enforcement, or automatic remediation
 
 Treat the generated artifacts as reviewer handoff evidence for a portfolio/demo repository, not as
 production governance evidence for a real healthcare environment.

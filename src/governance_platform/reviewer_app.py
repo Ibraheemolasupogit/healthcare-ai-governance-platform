@@ -31,7 +31,9 @@ from governance_platform.reviewer import (  # noqa: E402
     filter_rows,
     kpi_prefix_rows,
     kpi_value,
+    load_reviewer_policy_state,
     load_reviewer_state,
+    missing_policy_output_paths,
     rejection_reason_rows,
     status_counts,
     synthetic_boundary_text,
@@ -379,6 +381,68 @@ def _compliance_risk_page(state) -> None:
         _table(rows, empty=f"No {label.replace('_', ' ')} found for {evidence_ref}.")
 
 
+def _policy_controls_page() -> None:
+    st.header("Policy & Controls")
+    missing = missing_policy_output_paths("outputs")
+    if missing:
+        st.info("Policy catalog outputs have not been generated yet.")
+        st.code("python3 scripts/generate_policy_catalog.py", language="text")
+        _table(
+            tuple({"missing_path": str(path)} for path in missing),
+            empty="No missing policy outputs.",
+        )
+        return
+
+    policy_state = load_reviewer_policy_state()
+    summary = policy_state.assurance_summary
+    _metric_grid(
+        (
+            ("Policies", summary.policy_count),
+            ("Controls", summary.control_count),
+            ("Evidence requirements", summary.evidence_requirement_count),
+            ("Traceability rows", summary.traceability_row_count),
+            ("Pass results", summary.evaluation_status_counts.get("pass", 0)),
+            ("Warnings", summary.evaluation_status_counts.get("warning", 0)),
+            ("Failures", summary.evaluation_status_counts.get("fail", 0)),
+        )
+    )
+
+    st.subheader("Policies")
+    _table(policy_state.policy_rows, empty="No policies found in the generated policy catalog.")
+
+    st.subheader("Controls")
+    domain = _select_filter(
+        "Control domain", unique_values(policy_state.control_rows, "control_domain")
+    )
+    severity = _select_filter("Severity", unique_values(policy_state.control_rows, "severity"))
+    control_search = st.text_input(
+        "Policy/control search", placeholder="Filter by control id, name, implementation"
+    )
+    control_rows = filter_rows(
+        policy_state.control_rows, equals={"control_domain": domain, "severity": severity}
+    )
+    if control_search:
+        control_rows = tuple(
+            row
+            for row in control_rows
+            if control_search.lower() in " ".join(str(value) for value in row.values()).lower()
+        )
+    _table(control_rows, empty="No controls match the selected filters.")
+
+    st.subheader("Traceability")
+    control_id = _select_filter(
+        "Control ID", unique_values(policy_state.traceability_rows, "control_id")
+    )
+    status = _select_filter(
+        "Evaluation status", unique_values(policy_state.traceability_rows, "evaluation_status")
+    )
+    trace_rows = filter_rows(
+        policy_state.traceability_rows,
+        equals={"control_id": control_id, "evaluation_status": status},
+    )
+    _table(trace_rows, empty="No traceability rows match the selected filters.")
+
+
 def main() -> None:
     st.set_page_config(page_title="Governance Reviewer Portal", layout="wide")
     st.title("Governance Reviewer Portal")
@@ -399,6 +463,7 @@ def main() -> None:
             "Research & Access Governance",
             "Audit & Evidence",
             "Compliance & Risk",
+            "Policy & Controls",
         ),
     )
 
@@ -410,8 +475,10 @@ def main() -> None:
         _research_access_page(state)
     elif page == "Audit & Evidence":
         _audit_evidence_page(state)
-    else:
+    elif page == "Compliance & Risk":
         _compliance_risk_page(state)
+    else:
+        _policy_controls_page()
 
 
 if __name__ == "__main__":

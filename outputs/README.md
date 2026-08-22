@@ -49,3 +49,11 @@ a deterministic reviewer briefing, reviewer KPI/findings exports, a reviewer-fri
 index, and compact saved reviewer views. This is local reviewer handoff packaging over generated
 synthetic outputs only — not production hosting, authentication, Power BI/Fabric deployment, live
 tenant integration, monitoring, alerting, or regulatory certification.
+
+As of Milestone 9, `policy/` is populated by running
+`python scripts/generate_policy_catalog.py` (see the root
+[README's Policy and control catalog outputs section](../README.md#policy-and-control-catalog-outputs)):
+local policy metadata, a control catalog, control-to-evidence traceability, and a reviewer-readable
+policy assurance summary derived from implemented compliance controls and generated evidence refs.
+This is local governance metadata only — not a generic policy DSL, live enforcement, automatic
+remediation, production compliance orchestration, or regulatory certification.

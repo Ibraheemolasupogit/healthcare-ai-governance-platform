@@ -43,6 +43,16 @@ source-of-truth governance state.
   warning/failure exists or score is at least 5, and `high_risk` for any critical failure, at
   least 3 failures, or score at least 25.
 
+## Policy catalog and traceability
+
+As of Milestone 9, the implemented controls are also cataloged in
+`src/governance_platform/compliance/catalog.py` and documented in
+[`governance/controls/`](controls/). The catalog derives from the existing control definitions,
+maps controls to local policy metadata, records implementation references, defines evidence
+requirements, and generates a control-to-evidence traceability matrix under `outputs/policy/`.
+This is reviewer traceability over implemented local controls, not a generic policy engine or
+external certification framework.
+
 ## Current status
 
 **Implemented as of Milestone 5, locally and deterministically.**
@@ -50,6 +60,8 @@ source-of-truth governance state.
 summary, and assessment models; fixed control definitions; deterministic evaluation; bounded risk
 indicator derivation; posture classification; JSON/CSV/Markdown export; and validation helpers.
 `scripts/generate_compliance.py` writes reproducible outputs to `outputs/compliance/`.
+As of Milestone 9, `scripts/generate_policy_catalog.py` writes policy/control catalog and
+traceability outputs to `outputs/policy/`.
 
 This is not formal regulatory compliance, NHS DSPT certification, UK GDPR certification, MHRA
 approval, ISO certification, live enterprise monitoring, alerting, or production policy
