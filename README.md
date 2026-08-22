@@ -1,1180 +1,254 @@
 # Healthcare AI Governance & Secure Research Platform
 
-> **Portfolio project. Synthetic data only.** This repository does not connect to, represent,
-> or imply the existence of any real healthcare organisation, patient data, production Snowflake
-> account, Microsoft Fabric tenant, secure research environment, or live cloud infrastructure.
-> Every dataset, credential, tenant, and workload referenced here is fictional or intentionally
-> unimplemented until explicitly built and labelled as such.
+An architecture-first portfolio project for governing synthetic healthcare AI and secure-research
+workflows: inventory, access, audit, evidence, compliance, risk, reporting, and reviewer assurance.
+The repository demonstrates a complete local review path from deterministic source state to
+evidence-linked findings and offline verification.
 
-## What this is
+> **Boundary:** Synthetic data only. This is local, read-only, synthetic-data-only, and
+> non-production. It does not
+> connect to a real healthcare organisation, patient data, Snowflake account, Microsoft Fabric
+> tenant, Power BI workspace, identity system, or live cloud infrastructure. It does not claim
+> certification, organisational approval, or production deployment.
 
-A from-scratch, architecture-first foundation for a platform that governs the use of AI in a
-healthcare research setting: what datasets and models exist, who is allowed to access them, what
-research they're approved for, how that activity is audited, how risk and compliance are scored,
-and how all of it is reported to oversight stakeholders.
+## Architecture
 
-The platform is being built in milestones. **This repository currently contains Milestone 1
-(Platform Foundation), Milestone 2 (Synthetic Research & AI Inventory), Milestone 3 (Access &
-Research Control Plane), Milestone 4 (Audit & Evidence Plane), Milestone 5 (Risk &
-Compliance Monitoring Plane), Milestone 6 (Governance Reporting & Semantic Plane), Milestone 7
-(Local Governance Reviewer Portal), Milestone 8 (Reviewer Export & Demo Handoff), Milestone 9
-(Policy & Control Catalog), Milestone 10 (Control Assurance History & Drift), Milestone 11
-(Integrated Assurance Review Pack), Milestone 12 (Reviewer Acceptance & Demo Readiness), Milestone
-13 (Offline Assurance Archive & Verification Manifest), and Milestone 14 (Final Portfolio Polish
-& Release Assurance).**
-Milestone 2 adds a typed, validated metadata/inventory plane and a deterministic synthetic
-dataset/model/research portfolio generated from it. Milestone 3 adds a **local governance
-simulation** of the access request → decision → grant → revocation/expiry workflow, evaluated
-deterministically against that inventory. Milestone 4 adds an append-only audit trail over
-Milestones 2–3's activity and a deterministic, reviewer-readable evidence pack derived from it.
-Milestone 5 adds deterministic control evaluation, compliance findings, bounded risk indicators,
-and a governance posture over that same local state. Milestone 6 adds reporting-ready semantic
-contracts, deterministic governance KPIs, and an executive summary over existing outputs.
-Milestone 7 adds a local Streamlit reviewer portal over those generated outputs. Milestone 8 adds
-deterministic reviewer briefing exports, saved reviewer views, an evidence index, and a local demo
-runbook/smoke check. Milestone 9 adds a deterministic policy/control catalog and
-control-to-evidence traceability matrix over the implemented controls. Milestone 10 adds explicit
-local assurance snapshots and deterministic control/risk/posture drift reporting. Milestone 11
-adds a concise integrated assurance review pack that cross-links briefing, policy/control,
-evidence, and drift outputs for reviewer handoff. Milestone 12 adds deterministic
-review-readiness criteria, artifact completeness checks, demo-readiness evidence, and a blank
-reviewer walkthrough notes template. Milestone 13 adds a deterministic offline artifact manifest,
-SHA-256 verification, archive completeness validation, and an independent verification guide.
-Milestone 14 adds a fail-fast full pipeline assurance entrypoint and final portfolio assurance
-summary. No model approval automation, responsible AI workflow automation, live identity/RBAC/SIEM
-enforcement, authentication, production hosting, scheduling,
-alerting, remediation, formal sign-off, production acceptance, or Fabric/Power BI deployment has
-been implemented yet. See [Implemented vs. Planned](#implemented-vs-planned) below before assuming
-any capability exists.
+The platform has seven governance planes, with a reviewer-assurance overlay across them:
 
-## Platform intent
+- **Governance control:** policy and control definitions
+- **Inventory:** datasets, models, and research projects
+- **Access / research control:** request, decision, grant, expiry, and revocation simulation
+- **Audit / evidence:** append-only events, correlation, and evidence packs
+- **Compliance / risk:** deterministic controls, bounded risk indicators, and posture
+- **Reporting / semantic:** KPIs, snapshots, and executive summaries
+- **Engineering / infrastructure:** Python, Docker, Terraform, CI, and future platform design
+- **Reviewer assurance overlay:** portal, policy traceability, drift, readiness, archive, and final
+  assurance outputs
 
-The platform is designed around seven governance planes, described in full in
-[`reports/architecture.md`](reports/architecture.md):
-
-- **Governance control plane** — policy and control definitions (policy-as-code)
-- **Metadata / inventory plane** — dataset and model inventory
-- **Access / research-control plane** — research approval and access governance
-- **Audit / evidence plane** — auditability and evidence generation
-- **Risk / compliance plane** — compliance and risk scoring
-- **Reporting plane** — Fabric / Power BI governance reporting
-- **Engineering / infrastructure plane** — Docker, Terraform, CI/CD, and the future Snowflake
-  data/metadata platform
-
-Core technologies planned across the platform: Python, SQL, Snowflake, Microsoft Fabric, Power
-BI, Docker, Terraform, GitHub Actions, and policy-as-code tooling.
-
-Implemented locally: Python 3.11+, Pydantic models, deterministic JSON/CSV/Markdown generation,
-Ruff, pytest, and a read-only Streamlit reviewer portal. Snowflake, Fabric, Power BI, identity,
-and cloud hosting remain future integration architecture.
-
-## Repository structure
-
+```mermaid
+graph TB
+    GOV["Governance control"] --> INV["Inventory"]
+    GOV --> ACCESS["Access / research control"]
+    INV --> ACCESS
+    ACCESS --> AUDIT["Audit / evidence"]
+    INV --> RISK["Compliance / risk"]
+    AUDIT --> RISK
+    INV --> REPORT["Reporting / semantic"]
+    AUDIT --> REPORT
+    RISK --> REPORT
+    REPORT --> REVIEW["Reviewer assurance overlay"]
+    RISK --> REVIEW
+    AUDIT --> REVIEW
+    INFRA["Engineering / infrastructure"] -. local substrate .-> REVIEW
 ```
-.
-├── data/                       # Synthetic data only (empty; generated inventory lives in outputs/)
-├── src/governance_platform/
-│   ├── inventory/              # Metadata/inventory plane: entities, generation, validation, I/O
-│   ├── access/                 # Access/research-control plane: request/decision/grant simulation
-│   ├── audit/                  # Audit/evidence plane: append-only log + evidence-pack generation
-│   ├── compliance/             # Risk/compliance plane: controls, catalog, assurance, posture
-│   ├── reporting/              # Reporting plane: deterministic KPIs and snapshots
-│   ├── reviewer/               # Reviewer portal + export/filter/drill-through helpers
-│   └── reviewer_app.py         # Local Streamlit reviewer portal
-├── governance/                 # Governance operating-model documentation
-├── infrastructure/
-│   ├── docker/                 # Minimal local development container
-│   ├── terraform/              # Restrained IaC foundation (no live infra)
-│   └── snowflake/              # Documented intent, no live account/credentials
-├── fabric/
-│   ├── semantic_model/         # Documented intent, no semantic model built yet
-│   └── dashboards/             # Documented intent, no PBIX/dashboards built yet
-├── config/                     # Non-secret configuration scaffolding
-├── outputs/
-│   ├── inventory/              # Generated inventory CSV/JSON (gitignored, reproducible)
-│   ├── access/                 # Generated access requests/decisions/grants (gitignored)
-│   ├── evidence/               # Generated audit log + evidence pack (gitignored)
-│   ├── compliance/             # Generated control/risk/posture outputs (gitignored)
-│   ├── reporting/              # Generated reporting KPIs/snapshot (gitignored)
-│   ├── reviewer/               # Generated reviewer briefing bundle/views (gitignored)
-│   ├── policy/                 # Generated policy/control catalog outputs (gitignored)
-│   ├── assurance/              # Generated assurance-history drift outputs (gitignored)
-│   ├── assurance_pack/         # Generated integrated assurance review pack (gitignored)
-│   ├── readiness/              # Generated reviewer readiness evidence (gitignored)
-│   ├── archive/                # Generated offline manifest/checksums/guide (gitignored)
-│   └── final/                  # Generated final portfolio assurance summary (gitignored)
-├── reports/
-│   └── architecture.md         # Full architecture write-up + diagram
-├── docs/
-│   └── architecture/decisions/ # Architecture Decision Records (ADRs)
-├── scripts/
-│   ├── generate_inventory.py   # Generate/validate/export the synthetic inventory
-│   ├── generate_access.py      # Generate/evaluate/validate/export the access-control state
-│   ├── generate_evidence.py    # Build the audit log/evidence pack from the above
-│   ├── generate_compliance.py  # Evaluate controls and export compliance posture
-│   ├── generate_reporting.py   # Build reporting KPIs and executive summary
-│   ├── generate_reviewer_bundle.py # Build reviewer briefing bundle/views
-│   ├── generate_policy_catalog.py # Build policy/control catalog and traceability matrix
-│   ├── generate_assurance_history.py # Build assurance snapshots and drift report
-│   ├── generate_assurance_pack.py # Build integrated assurance review pack
-│   ├── generate_review_readiness.py # Build review-readiness checklist/report
-│   ├── generate_offline_archive.py # Build deterministic archive manifest/checksums
-│   ├── verify_offline_archive.py # Recalculate archive checksums read-only
-│   ├── run_portfolio_assurance.py # Run full generation, quality gates, and smoke checks
-│   └── smoke_reviewer_demo.py  # Validate local reviewer demo readiness
-├── tests/                      # Foundation + inventory + access + audit + compliance + reporting + reviewer
-└── .github/workflows/          # CI: install, lint, test, validate
-```
+
+See [reports/architecture.md](reports/architecture.md) for the full architecture, boundaries,
+and future integration design.
 
 ## Implemented vs. Planned
 
-### Implemented (Milestone 12 — Reviewer Acceptance & Demo Readiness)
+### Implemented locally
 
-- A typed immutable review-readiness layer in
-  `src/governance_platform/reviewer/readiness.py` for acceptance criteria, criterion results,
-  artifact completeness, demo-readiness evidence, and overall review-readiness classification
-- Deterministic acceptance categories covering architecture, inventory, access governance,
-  audit/evidence, compliance/risk, policy/control traceability, assurance history, reviewer
-  reporting, reviewer portal, documentation, reproducibility, and claim discipline
-- Semantic artifact completeness checks that load canonical generated outputs where loaders exist
-  and fail clearly when required upstream artifacts are missing
-- `scripts/generate_review_readiness.py`, which builds/exports `outputs/readiness/`, reloads the
-  canonical checklist/demo-readiness outputs, and validates expected files
-- `outputs/readiness/acceptance_checklist.json`, `acceptance_checklist.csv`,
-  `artifact_completeness.json`, `demo_readiness.json`, and `review_readiness_report.md` when the
-  generator is run
-- A blank reviewer walkthrough notes template at
-  `docs/demo/reviewer-walkthrough-template.md`; it is not a completed review, approval record,
-  sign-off, production acceptance, or certification
-- A read-only **Review Readiness** page in the local reviewer portal when `outputs/readiness/`
-  exists
-- pytest coverage for model validation, deterministic criterion ordering, demonstrated,
-  incomplete, not-applicable, and environment-blocked status handling, semantic loading,
-  readiness classification, missing artifacts, export/reload, deterministic outputs, portal
-  loading, walkthrough-template safeguards, and synthetic/local claim boundaries
+- Deterministic synthetic dataset, model, and research-project inventory
+- Access request -> decision -> grant lifecycle with expiry and revocation scenarios
+- Append-only audit and evidence generation with traceable identifiers
+- Compliance controls, findings, bounded risk scoring, and governance posture
+- Reporting and KPI snapshot layer
+- Read-only Streamlit reviewer portal with filters and drill-through
+- Policy/control catalog and control-to-evidence traceability
+- Assurance snapshots, control/risk drift, and integrated review pack
+- Review-readiness and demo validation
+- Offline SHA-256 archive manifest and read-only verification
+- Full deterministic portfolio assurance pipeline
 
-This layer demonstrates that local synthetic artifacts are available for review. It does not
-create human review, organisational approval, governance-board sign-off, production acceptance,
-or regulatory certification.
+### Planned / intentionally not implemented
 
-### Implemented (Milestone 13 — Offline Assurance Archive & Verification Manifest)
+- Live Snowflake integration, schemas, RBAC, and query-history ingestion
+- Entra ID, production authentication, and live identity provisioning
+- Microsoft Purview, SIEM, or other external audit integrations
+- Fabric semantic-model deployment and Power BI deployment
+- Production hosting, live monitoring, alerting, and enterprise observability
+- Automated approvals, remediation, workflow execution, or notifications
+- Digital signing, external attestation, regulatory certification, or organisational approval
 
-- A typed immutable archive layer in `src/governance_platform/reviewer/archive.py` selecting a
-  restrained reviewer-facing set of canonical outputs and documentation with safe repository-
-  relative paths
-- Deterministic `outputs/archive/` manifest, CSV inventory, exact-byte SHA-256 checksum list,
-  validation result, and concise offline verification guide
-- `scripts/generate_offline_archive.py`, which builds, exports, reloads, and validates the
-  manifest without duplicating governance logic
-- `scripts/verify_offline_archive.py`, a read-only verifier that returns non-zero for missing
-  files, unsafe paths, duplicates, or checksum mismatches
-- pytest coverage for path safety, stable ordering, checksum mismatch detection, missing required
-  artifacts, duplicate detection, manifest round-tripping, deterministic export, and claim
-  boundaries
+## Technology stack
 
-This is an offline integrity and handoff layer over local synthetic artifacts. Matching checksums
-do not prove authenticity, correctness, regulatory approval, external certification, human
-approval, production deployment, or production acceptance. Digital signing, external attestation,
-remote storage, and formal approval remain planned.
+Implemented locally: Python 3.11+, Pydantic, PyYAML, Streamlit, pytest, Ruff, JSON/CSV/Markdown
+generation, Docker development support, and GitHub Actions quality gates.
 
-### Implemented (Milestone 14 — Final Portfolio Polish & Release Assurance)
+Future architecture is documented for Snowflake, Fabric, Power BI, Terraform providers, identity,
+and policy-as-code integrations. Those integrations are not required to run this repository.
 
-- A typed final assurance summary in `src/governance_platform/reviewer/final_assurance.py` that
-  aggregates existing compliance, readiness, and archive validation state without adding
-  governance logic
-- `scripts/run_portfolio_assurance.py`, a fail-fast orchestration entrypoint for the complete
-  generation pipeline, archive verification, lint, format, tests, repository validation, and
-  reviewer smoke checks
-- Deterministic `outputs/final/portfolio_assurance_summary.json` and
-  `portfolio_assurance_summary.md` outputs with explicit local/synthetic/non-production boundaries
-- CI coverage for the complete assurance entrypoint on Python 3.12 without external credentials
+## Repository structure
 
-This milestone hardens presentation and reproducibility. It does not create approvals, signatures,
-deployments, live monitoring, external attestation, certification, or new governance capabilities.
+```text
+src/governance_platform/
+  inventory/       Inventory entities, generation, validation, and I/O
+  access/          Access and research-control simulation
+  audit/           Audit log, evidence, completeness, and reporting
+  compliance/      Controls, risk, policy catalog, and assurance history
+  reporting/       Governance KPIs and reporting snapshots
+  reviewer/        Portal data, exports, assurance packs, readiness, and archive helpers
+  reviewer_app.py  Local read-only Streamlit entrypoint
 
-### Implemented (Milestone 11 — Integrated Assurance Review Pack)
-
-- A typed immutable integrated review-pack layer in
-  `src/governance_platform/reviewer/assurance_pack.py` that aggregates existing briefing,
-  evidence-index, policy/control catalog, and assurance-history outputs without re-evaluating
-  controls, re-scoring risk, generating evidence, or recalculating drift
-- `AssuranceReviewPack`, `PriorityFinding`, and `ReviewerAction` models with explicit
-  synthetic/local/non-production claim boundaries
-- Deterministic priority findings ordered by current severity/status and drift context, including
-  the current `CTRL-0014` model-readiness warning, the linked bounded risk indicator, and the
-  Milestone 10 controlled `CTRL-0005` new-warning drift
-- Cross-linked policy/control/evidence/drift references in `assurance_evidence_map.csv`, using
-  existing evidence identifiers only
-- Review-only next steps for inspecting evidence, related controls, responsible-AI readiness, and
-  assurance drift; no remediation or workflow execution
-- `scripts/generate_assurance_pack.py`, which fails clearly when upstream generated outputs are
-  missing, builds/exports `outputs/assurance_pack/`, reloads the canonical pack, and validates
-  expected files
-- A read-only **Assurance Review Pack** page in the local reviewer portal when
-  `outputs/assurance_pack/` exists
-- pytest coverage for model validation, deterministic priority ordering, policy/control/evidence
-  linkage, drift linkage, reviewer actions, stable ordering, missing-source handling,
-  export/reload, deterministic output generation, portal loading, and synthetic/local safeguards
-
-This pack is a reviewer handoff artifact over local synthetic outputs. It is not new control
-logic, new risk scoring, automatic remediation, approval workflow automation, notifications, live
-monitoring, production observability, external governance integration, or regulatory
-certification.
-
-### Implemented (Milestone 10 — Control Assurance History & Drift)
-
-- A typed immutable assurance-history layer in
-  `src/governance_platform/compliance/assurance.py` for explicit local snapshots,
-  control drift, risk drift, posture comparison, and small in-memory history loading
-- Deterministic baseline and controlled comparison snapshots that preserve canonical generated
-  outputs; the controlled variant resolves the existing `CTRL-0014` warning for `MD-0003` and
-  introduces one low-severity operational review-date warning for drift demonstration
-- Drift comparison across control status, finding code, severity, bounded risk score, posture,
-  changed policy domains, and evidence references, with stable ordering and missing-control
-  handling
-- Policy/catalog linkage on control drift rows: control ID, policy ID, objective, evidence
-  requirement, evidence refs, and reviewer guidance come from the Milestone 9 catalog metadata
-- `scripts/generate_assurance_history.py`, which loads current compliance and policy catalog
-  outputs, builds/validates snapshots and comparison, exports `outputs/assurance/`, and reloads
-  canonical outputs
-- A read-only **Assurance History / Drift** page in the local reviewer portal when
-  `outputs/assurance/` exists
-- pytest coverage for snapshot validation, duplicate IDs, deterministic ordering, resolved/new
-  findings, improved/degraded risk, severity/posture changes, missing controls, export/reload,
-  deterministic exports, reviewer loading, and synthetic/local claim safeguards
-
-This is explicit historical comparison over local synthetic snapshots. It is not real-time
-monitoring, scheduled evaluation, alerting, automatic remediation, production observability, a
-production history database, or regulatory certification.
-
-### Implemented (Milestone 9 — Policy & Control Catalog)
-
-- A typed immutable policy/control catalog in `src/governance_platform/compliance/catalog.py`
-  built from the existing `default_control_definitions()` source of truth; it does not duplicate
-  or reimplement control evaluation logic
-- Local policy metadata for inventory, dataset, model, research, access, audit completeness,
-  evidence completeness, responsible AI readiness, and operational governance domains
-- Control catalog entries with objectives, severity, applies-to entities, implementation refs,
-  deterministic evaluation type, evidence requirements, expected evidence-reference patterns,
-  failure effects, reviewer guidance, policy IDs, and enabled state
-- Coverage validation for implemented-control/catalog synchronization, policy/control references,
-  evidence requirement ownership, enabled-control evidence coverage, duplicate IDs, assessment
-  coverage, source-plane validity, and known evidence-reference resolution
-- A deterministic control-to-evidence traceability matrix tying policies, controls,
-  implementation refs, evidence requirements, actual evidence refs, current evaluation status,
-  finding codes, and reviewer locations
-- `scripts/generate_policy_catalog.py`, which loads existing compliance/reviewer outputs, builds
-  and validates the catalog bundle, exports `outputs/policy/`, and reloads canonical outputs
-- A read-only **Policy & Controls** page in the local reviewer portal that shows generated
-  policies, controls, current status, implementation references, evidence refs, and traceability
-  rows when `outputs/policy/` exists
-- Governance documentation under `governance/controls/` describing the catalog, ownership,
-  objectives, evidence requirements, traceability, lifecycle, reviewer interpretation, and
-  limitations
-- pytest coverage for model validation, synchronization, evidence requirements, policy/control
-  references, traceability, deterministic ordering/export, JSON round trip, missing/orphan
-  detection, reviewer policy loading, and synthetic/local claim safeguards
-
-This catalog is local governance metadata for a portfolio repository. It is not a generic policy
-DSL, OPA/Rego integration, live policy enforcement platform, automatic remediation system,
-production compliance orchestrator, or regulatory interpretation/certification engine.
-
-### Implemented (Milestone 8 — Reviewer Export & Demo Handoff)
-
-- Deterministic reviewer handoff exports in `src/governance_platform/reviewer/exports.py`, built
-  from existing generated outputs and reviewer data helpers rather than re-running or duplicating
-  governance business logic
-- `scripts/generate_reviewer_bundle.py`, which loads canonical outputs, validates evidence
-  references, writes `outputs/reviewer/`, reloads the canonical briefing, and validates expected
-  files
-- A concise reviewer briefing bundle: `reviewer_briefing.json`, `reviewer_briefing.md`,
-  `reviewer_kpis.csv`, `reviewer_findings.csv`, `reviewer_evidence_index.csv`,
-  `reviewer_filtered_views.csv`, and `reviewer_filtered_views.md`
-- Saved deterministic reviewer views for high-risk models, pending/rejected research projects,
-  rejected access requests, revoked/expired grants, warning/failed controls, high-severity risk
-  indicators, audit events for `RP-0001`, and evidence references for `CR-0034`
-- A reviewer-friendly evidence index mapping supported identifiers to source planes, entity types,
-  descriptions, and canonical source files
-- `scripts/smoke_reviewer_demo.py`, which verifies generated outputs, reviewer loading,
-  briefing/export helper construction, drill-through behavior, Streamlit dependency availability,
-  and a brief headless app startup without leaving a server running
-- A demo runbook at `docs/demo/reviewer-demo-runbook.md` for external reviewer handoff
-- pytest coverage for briefing validation, deterministic generation, filtered views, evidence
-  index integrity, stable ordering, export/reload, missing-output behavior, smoke helper behavior,
-  and synthetic-data safeguards
-
-This handoff layer is local, reproducible, read-only, and synthetic-data-only. It does not provide
-production hosting, authentication, write/edit workflows, approvals, live tenant integration,
-Power BI/Fabric deployment, enterprise monitoring, alerting, or regulatory certification.
-
-### Implemented (Milestone 7 — Local Governance Reviewer Portal)
-
-- A local reviewer-facing Streamlit app (`src/governance_platform/reviewer_app.py`) over the
-  generated synthetic governance outputs — not a production web app, hosted service, Fabric
-  report, Power BI dashboard, or authenticated application
-- A clean UI data-access layer (`src/governance_platform/reviewer/`) that loads canonical outputs
-  through existing loaders (`outputs/inventory`, `outputs/access`, `outputs/evidence`,
-  `outputs/compliance`, `outputs/reporting`) and prepares deterministic reviewer-friendly rows;
-  it does not hard-code or duplicate governance source state
-- Five read-only reviewer sections: Executive Governance Overview, Data & Model Governance,
-  Research & Access Governance, Audit & Evidence, and Compliance & Risk
-- Deterministic KPI views, restrained built-in Streamlit charts, readable tables, source/evidence
-  identifiers, useful empty states, and filters/search for dataset/model/project/access/audit/
-  control/risk review
-- Drill-through helpers by research project, request, grant, and evidence reference, linking
-  related requests, decisions, grants, audit events, control results, risk indicators, and
-  source records
-- Clear missing-output handling: if generated artifacts are absent, the portal reports the
-  missing files and lists the generation commands to run
-- pytest coverage for portal data loading, source-output validation, filtering helpers, KPI
-  lookup, drill-through selection, status aggregation, missing-output handling, stable sorting,
-  and synthetic-data safeguards
-
-Run locally after generating outputs:
-
-```bash
-streamlit run src/governance_platform/reviewer_app.py
+governance/        Governance and control documentation
+docs/              ADRs and demo documentation
+reports/           Architecture and diagrams
+fabric/            Future Fabric / Power BI design
+infrastructure/    Docker, Terraform, and Snowflake design
+scripts/           Generation, verification, smoke, and assurance entrypoints
+tests/             Automated behavioral tests
+outputs/           Reproducible generated artifacts; gitignored
 ```
 
-This portal is a local portfolio/demo interface only. It has no editing or approval workflows,
-authentication, role-based application access, production hosting, live refresh, alerting, or
-regulatory certification.
-
-### Implemented (Milestone 6 — Governance Reporting & Semantic Plane)
-
-- The reporting plane (`src/governance_platform/reporting/`), as a **local deterministic
-  reporting layer** over existing synthetic governance state — not a deployed Microsoft Fabric
-  semantic model, Power BI report, live refresh, or tenant integration
-- Typed, immutable reporting models: `GovernanceKPI` and `ReportingSnapshot`, with strict enum
-  vocabularies for metric domains and units, source references on every KPI, and deterministic KPI
-  ordering
-- Governance KPIs derived from existing source-of-truth state and summary APIs: inventory posture,
-  dataset governance, model governance, research governance, access-control activity, grant
-  lifecycle status, rejected-access reasons, audit activity, evidence completeness, compliance
-  control results, risk indicators, bounded risk score, and overall governance posture
-- Loading, export, source-reference validation, and concise executive Markdown summary generation
-  — see [Reporting outputs](#reporting-outputs) below
-- `scripts/generate_reporting.py` — builds the same deterministic inventory, access, audit,
-  evidence, and compliance state as prior milestones, derives KPIs and a reporting snapshot,
-  writes outputs, then reloads and validates canonical JSON and source references
-- Fabric semantic-model and dashboard specifications in `fabric/semantic_model/` and
-  `fabric/dashboards/`, documenting future fact-style entities, dimension-style entities, keys,
-  relationships, grains, measures, pages, filters, and drill-through paths without creating or
-  claiming any deployed Fabric or Power BI artifact
-- pytest coverage for reporting model validation, metric calculations, source-reference integrity,
-  approval/pass-rate calculations, grant status metrics, audit metrics, compliance metrics, risk
-  metrics, snapshot construction, deterministic ordering, export/reload, deterministic output
-  generation, and synthetic-data safeguards
-
-This plane packages the current local governance state for review. It does not deploy Fabric,
-create `.pbix` files, call Fabric REST APIs, create workspaces, connect to Snowflake, perform live
-refresh, or assert regulatory certification.
-
-### Implemented (Milestone 5 — Risk & Compliance Monitoring Plane)
-
-- The risk/compliance plane (`src/governance_platform/compliance/`), as a **local,
-  deterministic governance simulation** — not certification, live monitoring, alerting, or
-  production enforcement: typed, immutable `ControlDefinition`, `ControlResult`,
-  `RiskIndicator`, `ComplianceSummary`, and `ComplianceAssessment` models with strict enum
-  vocabularies for domain, status, severity, entity type, finding code, risk category, and posture
-- A fixed, restrained control set covering inventory governance, dataset governance, model
-  governance, research governance, access governance, audit completeness, evidence completeness,
-  responsible AI readiness, and operational governance; controls are ordinary Python functions,
-  not a generic rules DSL
-- Deterministic evaluation over the existing Milestone 2 inventory, Milestone 3 access-control
-  state, and Milestone 4 audit/evidence state, reusing `evaluate_eligibility`,
-  `AccessControlService.is_grant_active`, and `check_completeness` where those rules already
-  exist; all findings are returned rather than stopping at the first failure
-- Bounded, explainable risk indicators derived only from warning/failed control results:
-  `low=1`, `medium=3`, `high=5`, `critical=8`, capped at 100 total. Overall posture is
-  `healthy` when all controls pass, `attention_required` when any warning/failure exists or score
-  is at least 5, and `high_risk` for any critical failure, at least 3 failures, or score at least
-  25
-- Loading, export, standalone validation, and reviewer-readable Markdown posture reporting — see
-  [Compliance outputs](#compliance-outputs) below
-- `scripts/generate_compliance.py` — builds/loads the same deterministic inventory, access,
-  audit, and evidence state as prior milestones, evaluates controls, derives risk indicators and
-  posture, writes outputs, then reloads and re-validates canonical JSON in one reproducible
-  command
-- pytest coverage for model validation, deterministic ordering, inventory/dataset/model/research/
-  access/audit/evidence controls, simultaneous findings, severity handling, risk-score bounds,
-  posture thresholds, evidence references, negative fixtures, deterministic generation,
-  canonical JSON round-tripping, and synthetic-data safeguards
-
-This plane evaluates the local synthetic governance state only. It does not assert NHS DSPT,
-UK GDPR, MHRA, ISO, or any other regulatory certification; it does not monitor live systems,
-enforce access, train models, automate model approval, or replace human responsible-AI review.
-
-### Implemented (Milestone 4 — Audit & Evidence Plane)
-
-- The audit/evidence plane (`src/governance_platform/audit/`), as a **local, deterministic
-  governance simulation** — not a production audit trail or live SIEM: a typed, immutable
-  `AuditEvent` (`entities.py`) with enums for actor type, entity type, action, event type, and
-  outcome (`enums.py`), and structural invariants tying `action`/`entity_type` to `event_type` so
-  they can never drift apart; an append-only `AuditLog` (`log.py`) with no update/remove method —
-  `append()` always returns a new log — enforcing unique `event_id`s and non-decreasing timestamps
-  within each correlated activity
-- Pure adapter functions (`adapters.py`) that translate already-produced Milestone 2/3 records into
-  audit events without wrapping or modifying `AccessControlService` — the access plane stays
-  independently testable — plus a deterministic orchestration layer (`generation.py`) that builds
-  the full log from the existing `generate_portfolio()`/`generate_access_control_state()` output
-  (no separate synthetic universe) with sequential `AE-0001`, `AE-0002`, ... event IDs and
-  correlation IDs derived from `request_id` (`CORR-{request_id}`), so a whole
-  request → evaluation → decision → grant → revocation/expiry activity is traceable as one group
-- Evidence-completeness checks (`completeness.py`) — every request has an evaluation event, every
-  rejected request has rejection evidence, every grant has a creation event, every revoked grant
-  has a revocation event, and every referenced ID resolves where a valid reference is actually
-  expected — returning human-readable problems rather than raising
-- A deterministic, reviewer-readable evidence pack (`evidence.py`, rendered by `markdown.py`):
-  inventory/access-control/audit summaries, per-request and per-grant evidence, correlation-group
-  traceability, a control-assurance summary, and a factual limitations section — derived entirely
-  from references, identifiers, timestamps, decisions, and control outcomes, never full dataset
-  records
-- Loading, export, and standalone validation (`io.py`, `validation.py`) — see
-  [Evidence outputs](#evidence-outputs) below
-- `scripts/generate_evidence.py` — loads the inventory, runs the access scenarios, builds the audit
-  log, checks completeness, derives and exports the evidence pack, then reloads and re-validates
-  the canonical JSON in one reproducible command
-- pytest coverage for event validation, immutability, deterministic IDs, duplicate/ordering
-  rejection, filtering, correlation, full request→decision→grant event chains, rejected/revoked/
-  expired evidence, completeness validation (including invalid references), evidence-pack
-  generation, JSON round-tripping, and the synthetic-data safeguards
-
-This is a local simulation over Milestones 2–3's own output — it does not implement a real SIEM,
-cloud audit service, Snowflake query-history ingestion, Microsoft Purview or Entra ID audit-log
-ingestion, real-time streaming, or an incident-response engine (see
-[Explicit non-goals](#explicit-non-goals) below).
-
-### Implemented (Milestone 3 — Access & Research Control Plane)
-
-- The access/research-control plane (`src/governance_platform/access/`), as a **local governance
-  simulation** — not live identity or Snowflake RBAC enforcement: typed, immutable
-  `AccessRequest`, `ApprovalDecision`, and `AccessGrant` entities (`entities.py`); deterministic
-  eligibility evaluation against the Milestone 2 inventory (`policy.py`) implementing the checks
-  in [Access outputs](#access-outputs) below; an `AccessControlService`
-  (`service.py`) orchestrating request → decision → grant → revocation/expiry, with grant
-  activity always computed from an explicitly supplied evaluation instant, never the system clock;
-  and an `AccessControlPortfolio` (`portfolio.py`) enforcing the access plane's own referential
-  integrity (no duplicate IDs, no grant without an approved decision, no grant exceeding what was
-  requested)
-- Deterministic synthetic scenario generation (`generation.py`): ten fixed requests run through the
-  real service against the Milestone 2 inventory, covering valid approved access; requests against
-  pending and expired projects; unlinked, research-use-prohibited, and unapproved datasets/models;
-  unknown dataset/model/project references; a duration exceeding project expiry; and, among the
-  approved requests, one active, one time-expired, and one explicitly revoked grant
-- Loading, export, standalone validation, and an aggregate access-review summary (`io.py`,
-  `validation.py`, `summary.py`) — see [Access outputs](#access-outputs) below
-- `scripts/generate_access.py` — loads the inventory, generates and evaluates the scenarios,
-  exports, reloads, and re-validates the access-control state in one reproducible command
-- pytest coverage for entity validation, policy evaluation (every rule below, individually),
-  service orchestration, referential integrity, deterministic generation, load/export
-  round-tripping, summary calculations, and the synthetic-data safeguards
-
-This is metadata and simulated decisions about access — it does not authenticate anyone, does not
-call Snowflake, Entra ID, or any other identity system, and does not provision or enforce real
-access to anything (see [Explicit non-goals](#explicit-non-goals) below).
-
-### Implemented (Milestone 2 — Synthetic Research & AI Inventory)
-
-- The metadata/inventory plane (`src/governance_platform/inventory/`): typed, validated dataset,
-  AI/ML model, and research project entities (`entities.py`), enums for sensitivity, lifecycle,
-  approval, risk tier, etc. (`enums.py`), and an `InventoryPortfolio` (`portfolio.py`) that
-  enforces cross-entity referential integrity — duplicate IDs and dangling dataset/model
-  references fail with a clear, human-readable error
-- Deterministic synthetic inventory generation (`generation.py`): a fixed, restrained portfolio of
-  6 datasets, 5 models, and 4 research projects covering multiple sensitivity classifications,
-  approved/pending/deprecated datasets, low/medium/high-risk models, and
-  approved/pending/expired research projects — identical on every run, on every machine
-- Loading, export, standalone validation, and an aggregate governance summary (`io.py`,
-  `validation.py`, `summary.py`) — see [Inventory outputs](#inventory-outputs) below
-- `scripts/generate_inventory.py` — generates, exports, reloads, and re-validates the inventory in
-  one reproducible command (documented under [Getting started](#getting-started-local-development))
-- pytest coverage for entity validation, referential integrity, deterministic generation,
-  load/export round-tripping, summary calculations, and the synthetic-data safeguard
-
-This plane is metadata about datasets, models, and research projects — it does not implement model
-training, deployment, inference, or monitoring, research workspace provisioning, approval-workflow
-automation, or any Snowflake connectivity (see [Explicit non-goals](#explicit-non-goals) below).
-
-### Implemented (Milestone 1 — Platform Foundation)
-
-- Repository structure and conventions listed above
-- Python package skeleton (`governance_platform`) with a config loader and logging setup utility
-  — foundation code only, no governance logic
-- Architecture documentation (`reports/architecture.md`) covering all seven governance planes,
-  including a Mermaid diagram
-- Architecture Decision Records for the foundational design choices (synthetic data only,
-  modular architecture, Snowflake as a future platform, Fabric/Power BI as a future reporting
-  layer, policy-as-code / evidence-as-code principles)
-- Lightweight governance operating-model documentation (dataset governance, model governance,
-  research approval, access review, audit/evidence, responsible AI, compliance monitoring) —
-  documentation of intended process, not working systems
-- Minimal development Docker image and Compose file for a reproducible local dev/test shell
-- Restrained Terraform scaffold (variables/outputs only, no providers, no resources, no state
-  backend, nothing deployable)
-- Documentation of intended Snowflake governance responsibilities (RBAC, tagging, masking, audit
-  logging) with no account, connection, or credentials
-- Documentation of intended Fabric/Power BI reporting architecture, with no semantic model or
-  dashboard files
-- pytest-based foundation tests validating package importability, config loading, and repository
-  structure
-- GitHub Actions CI: Python setup, dependency install, lint/format checks, tests, repository
-  validation
-
-### Planned (later milestones — **not implemented in this repository yet**)
-
-- Live Snowflake schema, roles, tags, and masking policies against a real (still non-production,
-  sandbox-style) account backing the inventory and access grants (see ADR
-  [0003](docs/architecture/decisions/0003-snowflake-as-future-governed-platform.md)) — this
-  milestone's inventory and access state are local JSON/CSV, not a Snowflake integration
-- Live Snowflake RBAC / role-grant enforcement, and Snowflake user/role provisioning
-- Entra ID (or any other) identity integration, authentication, and real user accounts
-- Periodic access recertification (the "reconfirm continued need, or revoke" cadence described in
-  [`governance/access_review.md`](governance/access_review.md))
-- Research workspace provisioning
-- Live Snowflake audit-log/query-history ingestion, a real SIEM, Microsoft Purview integration, or
-  Entra ID audit-log ingestion feeding the audit plane — Milestone 4's audit log is local and
-  self-contained, not fed by any of these
-- Real-time event streaming or production observability of any kind
-- Scheduled compliance evaluation, alerting, or a production assurance-history database
-- An incident-response engine
-- A model approval / responsible-AI review workflow with automated checks
-- Deployed Fabric semantic model and live semantic-model refresh
-- Published Power BI governance dashboards or `.pbix`/PBIP artifacts
-- Authentication, role-based application access, and production hosting for the local reviewer
-  portal
-- Human reviewer sign-off, governance-board approval, production acceptance, or external
-  certification
-- Any live Terraform deployment or cloud provisioning
-- Generic policy DSL / OPA/Rego integration, live policy enforcement, automatic remediation,
-  or production compliance orchestration
-
-Do not treat anything in this list as available — it is documented here precisely so it isn't
-assumed to exist.
-
-### Explicit non-goals
-
-Milestones 2–14 are metadata, inventory, local access-control, audit/evidence, compliance,
-reporting, reviewer-portal, reviewer-export, policy-catalog, assurance-history, assurance-pack,
-and review-readiness **simulations** only. They do not implement: Snowflake connectivity or deployed schemas, live
-Snowflake RBAC or user/role provisioning, Entra ID integration, authentication, real user accounts,
-cloud identity, live Snowflake query-history/audit-log ingestion, a real SIEM, Microsoft Purview
-integration, Entra ID audit-log ingestion, real-time streaming, production observability, an
-incident-response engine, a generic policy-as-code engine, approval-workflow automation,
-responsible-AI workflow automation, model approval automation, Fabric semantic models, Power BI
-dashboards, Terraform deployment, Salesforce workflows, regulatory certification, live monitoring,
-scheduled evaluation, alerting, production hosting, automatic remediation, production history
-databases, workflow execution, notifications, human review, organisational approval,
-governance-board approval, production acceptance, production compliance orchestration, or
-production access/audit/compliance enforcement of any kind. These
-remain [Planned](#planned-later-milestones--not-implemented-in-this-repository-yet) above.
-
-## Getting started (local development)
-
-Requires Python 3.11+.
+## Quick start
 
 ```bash
-python -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate
 pip install -e ".[dev]"
 
-pytest
-ruff check .
-ruff format --check .
-python scripts/validate_repository.py
+python3 scripts/run_portfolio_assurance.py
+```
 
-# Generate, export, and validate the synthetic governance inventory (Milestone 2):
-python scripts/generate_inventory.py
+The assurance entrypoint runs the complete generation chain, archive verification, lint, format,
+tests, repository validation, and reviewer smoke checks. It writes the final summary to
+`outputs/final/`.
 
-# Generate, evaluate, export, and validate the synthetic access-control state (Milestone 3):
-python scripts/generate_access.py
+Launch the local portal after generation:
 
-# Build the audit log, check completeness, and generate the evidence pack (Milestone 4):
-python scripts/generate_evidence.py
-
-# Evaluate controls, derive bounded risk indicators, and generate posture outputs (Milestone 5):
-python scripts/generate_compliance.py
-
-# Build reporting KPIs, snapshot, and executive summary (Milestone 6):
-python scripts/generate_reporting.py
-
-# Build reviewer briefing bundle, evidence index, and saved views (Milestone 8):
-python scripts/generate_reviewer_bundle.py
-
-# Build policy/control catalog and traceability matrix (Milestone 9):
-python scripts/generate_policy_catalog.py
-
-# Build assurance snapshots and drift report (Milestone 10):
-python scripts/generate_assurance_history.py
-
-# Build integrated assurance review pack (Milestone 11):
-python scripts/generate_assurance_pack.py
-
-# Build review-readiness checklist and demo evidence (Milestone 12):
-python scripts/generate_review_readiness.py
-
-# Build and verify offline assurance manifest (Milestone 13):
-python scripts/generate_offline_archive.py
-python scripts/verify_offline_archive.py
-
-# Run the complete final portfolio assurance path (Milestone 14):
-python scripts/run_portfolio_assurance.py
-
-# Or smoke-check local reviewer demo readiness independently (Milestones 8–13):
-python scripts/smoke_reviewer_demo.py
-
-# Start the local reviewer portal (Milestone 7):
+```bash
 streamlit run src/governance_platform/reviewer_app.py
 ```
 
-### Using Docker instead
+Individual generators are documented in [outputs/README.md](outputs/README.md) and the
+[reviewer demo runbook](docs/demo/reviewer-demo-runbook.md).
 
-```bash
-docker compose -f infrastructure/docker/docker-compose.yml run --rm dev
+## Reviewer workflow
+
+```text
+Generate assurance outputs
+  -> Launch reviewer portal
+  -> Review posture and findings
+  -> Trace controls to evidence
+  -> Inspect assurance drift
+  -> Verify review readiness
+  -> Verify offline archive
 ```
 
-This drops you into the same dependency set inside a container. See
-[`infrastructure/docker/README.md`](infrastructure/docker/README.md) — it is a development
-convenience, not a deployment artifact.
+Start with [docs/demo/reviewer-demo-runbook.md](docs/demo/reviewer-demo-runbook.md). It contains
+the deterministic walkthrough, example identifiers, drill-through paths, shutdown steps, and
+claim boundaries. The blank notes template is
+[docs/demo/reviewer-walkthrough-template.md](docs/demo/reviewer-walkthrough-template.md).
+
+## Key documentation
+
+- [Architecture](reports/architecture.md)
+- [Architecture decision records](docs/architecture/decisions/)
+- [Governance operating model](governance/README.md)
+- [Policy and control catalog](governance/controls/README.md)
+- [Generated output conventions](outputs/README.md)
+- [Reviewer demo runbook](docs/demo/reviewer-demo-runbook.md)
+- [Reviewer portal](src/governance_platform/reviewer_app.py)
+
+## Generated assurance artifacts
+
+The generated outputs are intentionally concise and reviewer-oriented:
+
+- [Inventory outputs](outputs/README.md#inventory-outputs)
+- [Access outputs](outputs/README.md#access-outputs)
+- [Evidence outputs](outputs/README.md#evidence-outputs)
+- [Compliance outputs](outputs/README.md#compliance-outputs)
+- [Reporting outputs](outputs/README.md#reporting-outputs)
+- [Reviewer export and demo handoff](outputs/README.md#reviewer-export-and-demo-handoff)
+- [Policy/control catalog](outputs/README.md#policy-and-control-catalog-outputs)
+- [Assurance history and drift](outputs/README.md#assurance-history-and-drift-outputs)
+- [Integrated assurance review pack](outputs/README.md#integrated-assurance-review-pack-outputs)
+- [Review readiness](outputs/README.md#reviewer-acceptance-and-demo-readiness-outputs)
+- `outputs/archive/` — SHA-256 manifest, validation, checksums, and offline guide
+- `outputs/final/` — final portfolio assurance summary
+
+The canonical local result is a deterministic synthetic governance state, not evidence of a real
+organisation or production system.
 
 ## Inventory outputs
 
-`python scripts/generate_inventory.py` writes the following to `outputs/inventory/` (gitignored —
-reproducible from `src/governance_platform/inventory/`, not stored as static artifacts, per ADR
-[0005](docs/architecture/decisions/0005-policy-as-code-and-evidence-as-code.md)):
-
-```text
-outputs/inventory/inventory_portfolio.json   # canonical, lossless JSON (datasets + models + projects)
-outputs/inventory/datasets.csv
-outputs/inventory/models.csv
-outputs/inventory/research_projects.csv
-outputs/inventory/inventory_summary.json     # aggregate counts by status, classification, risk tier
-```
-
-### Entities and relationships
-
-- **Dataset** (`dataset_id`, e.g. `DS-0001`) — owner, steward, sensitivity classification, data
-  category, source type, lifecycle/approval status, retention class, and a
-  `contains_synthetic_data_only` flag that entity-level validation requires to be `true` for every
-  dataset (ADR [0001](docs/architecture/decisions/0001-synthetic-data-only.md)).
-- **AIModel** (`model_id`, e.g. `MD-0001`) — owner, model type, intended use, risk tier,
-  responsible-AI review status, and `linked_dataset_ids` referencing the dataset(s) it was
-  trained/evaluated on. A model at `risk_tier=high` cannot be `approval_status=approved` without
-  `responsible_ai_review_status=approved`, and must have `monitoring_required=true` — encoding the
-  rule described in `governance/model_governance.md`.
-- **ResearchProject** (`research_project_id`, e.g. `RP-0001`) — principal owner, purpose,
-  `linked_dataset_ids` and `linked_model_ids`, approval status, risk classification, and
-  start/expiry dates (`expiry_date` must be after `start_date`).
-- `InventoryPortfolio` (`src/governance_platform/inventory/portfolio.py`) validates the whole set
-  together: no duplicate IDs across any entity type, and every `linked_dataset_ids`/
-  `linked_model_ids` reference must resolve to a dataset/model that actually exists — a dangling
-  or duplicate reference fails construction with a specific error identifying the offending ID.
-
-### Generation and validation process
-
-`generation.py` returns a **fixed, hand-authored** portfolio (six datasets, five models, four
-research projects) rather than randomly sampled data — deterministic by construction, so
-`generate_portfolio()` returns byte-identical data on every call, process, and machine. It
-deliberately covers, without padding the count further: an operational, a population-health, a
-synthetic clinical-text, and a research-feature dataset; approved, pending, and deprecated
-datasets; low/medium/high-risk models; and approved, pending, and expired research projects. Every
-identity (`owner`, `steward`, `principal_owner`) is a fictional role title (e.g. "Population Health
-Data Owner"), never a real person's name.
-
-Validation happens in two layers: pydantic raises immediately on construction (`Dataset(...)`,
-`InventoryPortfolio(...)`), while `governance_platform.inventory.validation.validate_portfolio_data`
-/ `validate_portfolio_file` return a list of human-readable problems instead of raising, for
-CLI-style reporting against hand-edited or externally-produced inventory data.
-
-### Limitations
-
-This is metadata about datasets, models, and research projects — not the datasets, models, or
-research workspaces themselves. No model training, deployment, inference, or monitoring; no
-research workspace provisioning; no approval-workflow automation. As of Milestone 3, the access
-plane reads this inventory for eligibility evaluation, and as of Milestone 4, the audit/evidence
-plane reads both for evidence generation. As of Milestone 5, the compliance plane reads the
-inventory, access-control state, audit log, and evidence pack to evaluate deterministic controls
-and derive bounded risk indicators. `inventory_summary.json` itself remains counts and breakdowns
-only.
+Deterministic inventory artifacts are generated by the assurance pipeline and documented in
+[outputs/README.md](outputs/README.md).
 
 ## Access outputs
 
-`python scripts/generate_access.py` writes the following to `outputs/access/` (gitignored —
-reproducible from `src/governance_platform/access/`, not stored as static artifacts, per ADR
-[0005](docs/architecture/decisions/0005-policy-as-code-and-evidence-as-code.md)):
-
-```text
-outputs/access/access_control_state.json     # canonical, lossless JSON (requests + decisions + grants)
-outputs/access/access_requests.csv
-outputs/access/approval_decisions.csv
-outputs/access/access_grants.csv
-outputs/access/access_review_summary.json    # aggregate counts by status, grant activity, rejection reason
-```
-
-### Lifecycle: request -> decision -> grant -> revocation/expiry
-
-`governance_platform.access.AccessControlService`, given a Milestone 2 `InventoryPortfolio`
-snapshot, orchestrates four immutable steps — each one a new record, never an edit to a previous
-one (consistent with `governance/audit_evidence.md`'s append-only principle):
-
-1. **`submit_request(...)`** creates an `AccessRequest` (`request_id`, e.g. `AR-0001`) with
-   `status=submitted`. No eligibility check happens yet.
-2. **`decide(request, ...)`** evaluates the request via `evaluate_eligibility` (below), records an
-   `ApprovalDecision` (`decision_id`, e.g. `AD-0001`) with `decision=approved`/`rejected` and a
-   `decision_reason` built from every violation found, and returns a new `AccessRequest` with
-   `status` finalized to match — the original request object is left untouched (it is frozen).
-3. **`create_grant(request, decision, ...)`** creates a time-bounded `AccessGrant` (`grant_id`, e.g.
-   `AG-0001`) only from an approved decision — it raises `ValueError` for a rejected or
-   mismatched decision.
-4. **`revoke_grant(grant, ...)`** returns a new, revoked copy of a grant with `revoked_at` and
-   `revocation_reason` set. **`is_grant_active(grant, at)`** and **`expired_grants(grants, at)`**
-   determine activity purely from the explicitly supplied instant `at` against
-   `granted_at`/`expires_at`/`status` — never the system clock, so evaluation is reproducible
-   regardless of when it runs.
-
-### Policy checks implemented
-
-`governance_platform.access.policy.evaluate_eligibility(request, inventory)` is a pure function
-that checks, and reports *every* applicable violation for (not just the first):
-
-1. the referenced `ResearchProject` exists in the inventory
-2. it is `approval_status=approved`
-3. it is not `approval_status=expired`
-4. every requested dataset exists in the inventory
-5. every requested model exists in the inventory
-6. every requested dataset/model is already in the project's `linked_dataset_ids`/`linked_model_ids`
-7. every requested dataset has `research_use_allowed=true`
-8. every requested dataset and model is itself `approval_status=approved`
-9. `requested_until` does not fall after the project's `expiry_date`
-
-A request can fail for more than one reason at once — `EligibilityResult.violations` carries a
-structured `RejectionReasonCode` and a human-readable detail per violation, so every rejection is
-explainable. `AccessGrant` itself enforces rule 10 (time-bounded: `expires_at` must be after
-`granted_at`) and consistent revocation fields as entity-level invariants, and
-`AccessControlPortfolio` enforces rule 11 (no grant without an approved decision) as a
-cross-entity invariant — both fail construction rather than relying on caller discipline.
-
-### Generation and validation process
-
-`generation.py` runs ten fixed requests through the real `AccessControlService` against the
-Milestone 2 synthetic inventory — deterministic by construction, so
-`generate_access_control_state()` returns byte-identical data on every call. It covers: valid
-approved access; a pending project; an expired project; a dataset not linked to its project; a
-dataset whose research use is prohibited; a duration exceeding project expiry; unknown
-dataset/model references; an unknown research project; and, among the three approved requests, one
-grant left active, one left to expire by the fixed reference evaluation time
-(`REFERENCE_EVALUATION_TIME`, 2025-03-15 — a synthetic reference point, not "now"), and one
-explicitly revoked. Every `requester_id`/`approver_id` is a fictional, role-based access-plane
-identifier (e.g. `"researcher-population-health-01"`), never a real person's name.
-
-Validation happens in two layers, mirroring the inventory plane: pydantic raises immediately on
-construction (`AccessRequest(...)`, `AccessControlPortfolio(...)`), while
-`governance_platform.access.validation.validate_access_state_data`/`validate_access_state_file`
-return a list of human-readable problems instead of raising, for CLI-style reporting. That
-validation covers the access plane's own referential integrity only (duplicate IDs, dangling
-request references, grants without an approved decision) — it does not re-run inventory
-eligibility policy, which is a property of a request/inventory pair, not of a state file alone.
-
-### Synthetic/local nature and limitations
-
-This is a **local governance simulation**: typed records and deterministic policy evaluation run
-in-process against an in-memory inventory snapshot. It does not authenticate anyone, does not call
-Snowflake, Entra ID, or any other identity system, does not provision or enforce real access to
-anything. As of Milestone 4, this plane's activity is recorded by the audit/evidence plane below,
-and as of Milestone 5 it is evaluated by the compliance plane for evidence-backed controls — see
-[Evidence outputs](#evidence-outputs). Periodic access recertification (`governance/access_review.md`'s
-"reconfirm continued need, or revoke" cadence) is also not implemented — a grant's activity is
-always recomputed from its fixed window, not
-re-reviewed on a cadence.
+Deterministic access requests, decisions, grants, expiry, and revocation artifacts are documented
+in [outputs/README.md](outputs/README.md).
 
 ## Evidence outputs
 
-`python scripts/generate_evidence.py` writes the following to `outputs/evidence/` (gitignored —
-reproducible from `src/governance_platform/audit/`, not stored as static artifacts, per ADR
-[0005](docs/architecture/decisions/0005-policy-as-code-and-evidence-as-code.md)):
-
-```text
-outputs/evidence/audit_events.json    # canonical, lossless JSON — the full AuditLog
-outputs/evidence/audit_events.csv
-outputs/evidence/audit_summary.json   # aggregate counts by type, outcome, entity type, project
-outputs/evidence/evidence_pack.json   # canonical, lossless JSON — the full EvidencePack
-outputs/evidence/evidence_pack.md     # reviewer-readable Markdown rendering of the same pack
-```
-
-### Append-only audit model
-
-`AuditEvent` (`src/governance_platform/audit/entities.py`) is frozen and `extra="forbid"`, exactly
-like the inventory and access entities. `AuditLog` (`log.py`) holds a tuple of events and exposes
-no update/remove method on its public API — `append(event)` returns a **new** `AuditLog` rather
-than mutating the one it was called on, and re-validates the full resulting sequence: duplicate
-`event_id`s are rejected, and within each correlation group (below), a newly appended event's
-`occurred_at` may not be earlier than the previous event recorded in that group. This mirrors
-`governance/audit_evidence.md`'s "audit events are append-only; corrections are recorded as new
-events, not edits to history."
-
-### Event taxonomy
-
-A restrained set of nine `AuditEventType` values covers exactly the actions the inventory and
-access planes actually perform — nothing speculative:
-
-`inventory_created`, `inventory_validated`, `access_requested`, `access_evaluated`,
-`access_approved`, `access_rejected`, `grant_created`, `grant_revoked`, `grant_expired`.
-
-Each event type is tied by construction to exactly one `entity_type` (`inventory` /
-`access_request` / `access_grant`) and one normalized `action` verb (e.g. both
-`inventory_created` and `grant_created` carry `action=create`) — `AuditEvent` rejects a mismatch at
-construction time rather than relying on caller discipline. `outcome` (`success` / `denied` /
-`revoked` / `expired`) records the governance-relevant result; `reason` carries the decision/
-revocation reason for a denial or revocation. `metadata` is a small `dict[str, str]` for
-non-sensitive context (e.g. a dataset/model count); entity-level validation rejects any metadata
-entry that looks like it might contain a secret or patient-level marker (`ssn`, `password`,
-`token`, `mrn`, `patient`, etc.) as a structural, not just conventional, safeguard.
-
-### Correlation approach
-
-Every event carries a `correlation_id` so a whole governance activity — request → evaluation →
-approval/rejection → grant creation → revocation/expiry — is discoverable as one group via
-`AuditLog.filter_by_correlation_id`/`correlation_groups`. Correlation IDs are **derived, not
-randomly generated**: `governance_platform.audit.adapters.request_correlation_id(request_id)`
-returns `f"CORR-{request_id}"` (e.g. `CORR-AR-0001`), so every event tied to that request —
-including any grant created from it — shares the same id by construction. The two inventory-plane
-events share a fixed `CORR-INVENTORY-0001`.
-
-### Evidence-pack composition
-
-`EvidencePack` (`evidence.py`) is a pure function of the inventory, access-control state, audit
-log, and explicitly supplied `generated_at`/`evaluated_at` timestamps — never the system clock. It
-does not copy full dataset/model/project records; it carries counts, breakdowns, identifiers,
-timestamps, decisions, and control outcomes: inventory evidence (counts + status breakdowns),
-access-request evidence, approval-decision evidence, grant evidence (status as of the evaluation
-instant), rejected-access evidence, correlation-group evidence (the event-type chain and final
-outcome per activity), a completeness result, and a fixed `limitations` section. `markdown.py`
-renders the same pack as reviewer-readable Markdown with no new computation — evidence-pack ID,
-generation timestamp, scope, source systems, inventory/access-control summaries, key audit events
-(grouped by correlation), rejected-access evidence, active/expired/revoked grant evidence, a
-control-assurance summary, and limitations, in that order.
-
-### Evidence-completeness validation
-
-`governance_platform.audit.completeness.check_completeness(audit_log, inventory, access_state)` is
-**evidence completeness validation, not a generic policy engine** — it asks "is evidence we'd
-expect to exist actually present?", not "was the governed activity correct?" (that's
-`governance_platform.access.policy`'s job). It checks: every access request has an
-`access_evaluated` event; every rejected request has an `access_rejected` event; every grant has a
-`grant_created` event; every revoked grant has a `grant_revoked` event; every emitted `event_id` is
-unique; and every `request_id`/`decision_id`/`grant_id` reference resolves. A
-`research_project_id` is only required to resolve on events that could only exist once a project
-was already validated (`access_approved`, `grant_created`, `grant_revoked`, `grant_expired`) — a
-request rejected specifically because it named an unknown project still carries that (unresolved)
-project id on its `access_requested`/`access_evaluated`/`access_rejected` events, which is the
-audit trail correctly preserving what was claimed, not a completeness gap.
-
-### Synthetic/local nature and relationship to the inventory and access planes
-
-This is a **local, deterministic governance simulation** layered over Milestones 2–3's own output
-— `generate_audit_log` takes the exact `InventoryPortfolio`/`AccessControlPortfolio` those
-milestones' generators produce (or any equivalent reloaded state) and translates it into events via
-pure adapter functions; it does not create a separate synthetic universe, and it does not wrap or
-modify `AccessControlService`, so the access plane remains independently testable. It does not
-implement a real SIEM, cloud audit service, Snowflake query-history ingestion, Microsoft Purview or
-Entra ID audit-log ingestion, real-time streaming, or an incident-response engine (those remain
-[Planned](#planned-later-milestones--not-implemented-in-this-repository-yet)). Nothing here claims
-regulatory certification or production audit-trail status — see the evidence pack's own
-`limitations` section.
+Audit events, correlation, completeness, and evidence-pack artifacts are documented in
+[outputs/README.md](outputs/README.md).
 
 ## Compliance outputs
 
-`python scripts/generate_compliance.py` writes the following to `outputs/compliance/`
-(gitignored — reproducible from `src/governance_platform/compliance/`, not stored as static
-artifacts, per ADR [0005](docs/architecture/decisions/0005-policy-as-code-and-evidence-as-code.md)):
-
-```text
-outputs/compliance/control_results.json      # canonical control-result list
-outputs/compliance/control_results.csv
-outputs/compliance/risk_indicators.json      # bounded risk indicators from non-passing results
-outputs/compliance/compliance_summary.json   # canonical, lossless ComplianceAssessment
-outputs/compliance/governance_posture.md     # reviewer-readable posture report
-```
-
-The control flow is deterministic:
-
-```text
-Governance State -> Control Evaluation -> Compliance Findings -> Risk Indicators
--> Governance Posture
-```
-
-Controls cover inventory identifiers and references, the synthetic-data-only invariant,
-ownership/stewardship and review metadata, granted dataset/model approval and lifecycle state,
-research project approval/expiry/scope for active grants, grant decision evidence, rejected
-request handling, grant time bounds, audit completeness, lifecycle events, correlation chains,
-duplicate audit IDs, evidence-reference resolution, and high-risk model readiness.
-
-Risk scoring is bounded and transparent: warning/failed findings become indicators scored by
-severity (`low=1`, `medium=3`, `high=5`, `critical=8`) with a total cap of 100. Posture is
-`healthy` when all controls pass, `attention_required` when any warning/failure exists or score is
-at least 5, and `high_risk` for any critical failure, at least 3 failures, or score at least 25.
-The generated canonical portfolio currently produces one responsible-AI readiness warning for the
-pending high-risk LLM (`MD-0003`) and no failures. This is not predictive modelling, regulatory
-certification, live monitoring, alerting, or production policy enforcement.
+Control results, bounded risk indicators, posture, and compliance reports are documented in
+[outputs/README.md](outputs/README.md).
 
 ## Reporting outputs
 
-`python scripts/generate_reporting.py` writes the following to `outputs/reporting/`
-(gitignored — reproducible from `src/governance_platform/reporting/`, not stored as static
-artifacts, per ADR [0005](docs/architecture/decisions/0005-policy-as-code-and-evidence-as-code.md)):
-
-```text
-outputs/reporting/governance_kpis.json      # canonical reporting KPI rows
-outputs/reporting/governance_kpis.csv
-outputs/reporting/reporting_snapshot.json   # canonical, lossless ReportingSnapshot
-outputs/reporting/executive_summary.md      # concise reviewer/executive summary
-```
-
-The reporting flow is deterministic:
-
-```text
-Inventory + Access + Audit + Evidence + Compliance
-        -> Reporting Semantic Layer
-        -> Governance Metrics
-        -> Reviewer / Executive Views
-```
-
-Metrics include inventory counts and breakdowns, dataset/model/research governance posture,
-access-request approval and rejection metrics, grant lifecycle status, rejection reasons, audit
-event counts and completeness, evidence completeness, compliance pass/warning/failure metrics,
-findings by domain/severity, risk indicator counts, bounded risk score, and overall governance
-posture. Every KPI has source references back to the local source artifact(s). This is not a
-deployed Fabric semantic model, Power BI report, live refresh, or tenant integration.
-
-## Local reviewer portal
-
-`streamlit run src/governance_platform/reviewer_app.py` starts a local read-only reviewer portal
-over the generated outputs. Generate the deterministic state first with the five scripts above.
-
-The portal reads canonical files rather than rebuilding governance logic:
-
-```text
-Governance Source State -> Existing Reporting Snapshot -> Reviewer Portal
--> Navigation / Filtering / Drill-through -> Governance Review Experience
-```
-
-Implemented sections:
-
-- **Executive Governance Overview** — posture, bounded risk score, control pass/warning/failure
-  metrics, inventory totals, access totals, grant status, and audit/evidence completeness.
-- **Data & Model Governance** — dataset and model inventory review with filters for approval,
-  sensitivity, research-use eligibility, risk tier, and model approval state.
-- **Research & Access Governance** — research projects, access requests, decisions, grants,
-  rejection reasons, and drill-through by project/request/grant.
-- **Audit & Evidence** — audit-event timeline with filters for event type, outcome, project,
-  request, and grant, plus evidence-pack completeness summary.
-- **Compliance & Risk** — controls, pass rate, findings by severity/domain, risk indicators,
-  bounded risk score, posture, and evidence-reference drill-through.
-- **Policy & Controls** — generated local policies, cataloged implemented controls, current
-  status counts, implementation references, evidence requirements, and traceability rows when
-  `outputs/policy/` has been generated.
-- **Assurance History / Drift** — generated baseline/comparison snapshots, risk-score delta,
-  changed controls, risk drift, changed policy domains, and evidence references when
-  `outputs/assurance/` has been generated.
-- **Assurance Review Pack** — integrated pack summary, top priority findings, review-only
-  actions, policy/control links, evidence references, and drift context when
-  `outputs/assurance_pack/` has been generated.
-- **Review Readiness** — overall review-readiness status, demonstrated/incomplete criteria,
-  artifact completeness, evidence traceability availability, and environment limitations when
-  `outputs/readiness/` has been generated.
-
-The app fails clearly when required generated outputs are missing and tells the reviewer which
-generation commands to run. It has no write/edit workflows, approval actions, authentication,
-role-based app access, production hosting, Power BI/Fabric deployment, live refresh, alerting, or
-regulatory certification.
+Governance KPIs, reporting snapshots, and executive summaries are documented in
+[outputs/README.md](outputs/README.md).
 
 ## Reviewer export and demo handoff
 
-`python scripts/generate_reviewer_bundle.py` writes a deterministic reviewer handoff bundle to
-`outputs/reviewer/` after the inventory, access, evidence, compliance, and reporting outputs have
-been generated:
-
-```text
-outputs/reviewer/reviewer_briefing.json        # canonical briefing model
-outputs/reviewer/reviewer_briefing.md          # concise reviewer-readable briefing
-outputs/reviewer/reviewer_kpis.csv             # reporting KPI export for reviewers
-outputs/reviewer/reviewer_findings.csv         # warning/failure controls + risk indicators
-outputs/reviewer/reviewer_evidence_index.csv   # evidence refs mapped to source files/entities
-outputs/reviewer/reviewer_filtered_views.csv   # compact saved reviewer views
-outputs/reviewer/reviewer_filtered_views.md    # Markdown rendering of saved views
-```
-
-The saved views cover high-risk models, pending/rejected research projects, rejected access
-requests, revoked/expired grants, warning/failed controls, high-severity risk indicators, audit
-events for `RP-0001`, and evidence references for `CR-0034`. The evidence index uses existing
-identifiers only, such as `model:MD-0003`, `access_grant:AG-0001`, `audit_event:AE-0033`, and
-`evidence_pack:EVP-0001`; unsupported evidence is not invented.
-
-`python scripts/smoke_reviewer_demo.py` verifies local demo readiness without browser automation:
-required outputs exist, reviewer data loads, briefing and evidence-index helpers build, common
-drill-through paths work, policy/catalog, assurance-history, assurance-pack, and readiness outputs
-load, deterministic readiness export behavior holds, Streamlit is importable, and the reviewer app
-can briefly start in headless mode before being stopped. If a restricted execution environment
-blocks local port binding, the smoke check reports that condition and validates the Streamlit
-dependency and entrypoint instead.
-
-For a step-by-step reviewer walkthrough, see
-[`docs/demo/reviewer-demo-runbook.md`](docs/demo/reviewer-demo-runbook.md).
+Briefing, evidence-index, and saved reviewer-view artifacts are documented in
+[outputs/README.md](outputs/README.md) and [the demo runbook](docs/demo/reviewer-demo-runbook.md).
 
 ## Policy and control catalog outputs
 
-`python scripts/generate_policy_catalog.py` writes a deterministic policy/control catalog to
-`outputs/policy/` after compliance, reporting, and reviewer outputs have been generated:
-
-```text
-outputs/policy/policy_catalog.json                  # canonical local policy metadata
-outputs/policy/control_catalog.json                 # canonical control catalog metadata
-outputs/policy/control_catalog.csv                  # reviewer-friendly control catalog
-outputs/policy/control_evidence_traceability.csv    # control-to-evidence traceability matrix
-outputs/policy/policy_assurance_summary.json        # aggregate catalog coverage/status
-outputs/policy/policy_assurance_summary.md          # reviewer-readable assurance summary
-```
-
-The catalog derives from `default_control_definitions()` and current compliance outputs. It maps
-each implemented control to a local policy, implementation reference, evidence requirements,
-actual evidence references, current evaluation status, finding code, and reviewer location. It
-validates that the catalog remains synchronized with implemented controls and that current
-evidence refs resolve in the generated evidence index.
-
-This is explicit governance metadata and reviewer traceability over local synthetic outputs. It is
-not a generic policy DSL, OPA/Rego integration, live policy enforcement, automatic remediation,
-production compliance orchestration, or regulatory interpretation/certification engine.
+Policy metadata, control catalog, and control-to-evidence traceability are documented in
+[governance/controls/README.md](governance/controls/README.md) and [outputs/README.md](outputs/README.md).
 
 ## Assurance history and drift outputs
 
-`python scripts/generate_assurance_history.py` writes deterministic assurance-history artifacts to
-`outputs/assurance/` after compliance and policy catalog outputs have been generated:
-
-```text
-outputs/assurance/assurance_snapshots.json      # canonical explicit baseline/current snapshots
-outputs/assurance/assurance_comparison.json     # canonical snapshot comparison
-outputs/assurance/control_drift.csv             # reviewer-friendly control drift rows
-outputs/assurance/risk_drift.csv                # reviewer-friendly risk drift rows
-outputs/assurance/assurance_drift_summary.json  # summary metrics for the comparison
-outputs/assurance/assurance_drift_report.md     # concise reviewer change report
-```
-
-The baseline snapshot represents the canonical current governance state. The comparison snapshot
-is a controlled synthetic variant for demonstration: `CTRL-0014` for `MD-0003` is resolved and one
-low-severity operational review-date warning is introduced. Canonical compliance, policy,
-reporting, and reviewer outputs are not overwritten.
-
-This is explicit local historical comparison only. It is not real-time monitoring, scheduled
-evaluation, alerting, automatic remediation, production observability, a production history store,
-or regulatory certification.
+Explicit snapshots, control/risk drift, and reviewer change reports are documented in
+[reports/architecture.md](reports/architecture.md) and [outputs/README.md](outputs/README.md).
 
 ## Integrated assurance review pack outputs
 
-`python scripts/generate_assurance_pack.py` writes a concise reviewer-ready assurance package to
-`outputs/assurance_pack/` after reviewer, policy, and assurance-history outputs have been
-generated:
-
-```text
-outputs/assurance_pack/assurance_review_pack.json   # canonical integrated pack
-outputs/assurance_pack/priority_findings.csv        # prioritized findings with policy/control links
-outputs/assurance_pack/reviewer_actions.csv         # review-only next steps
-outputs/assurance_pack/assurance_evidence_map.csv   # finding/control/policy/evidence/drift map
-outputs/assurance_pack/assurance_review_pack.md     # concise reviewer-readable pack
-```
-
-The pack cross-links current governance posture, selected metrics, current findings, risk
-indicators, policy/control catalog metadata, evidence references, and assurance drift. It derives
-from existing canonical outputs and APIs only. It does not introduce new controls, new risk
-scoring, remediation, approval workflows, notifications, live monitoring, production
-observability, external integrations, or certification.
+The integrated finding, policy, control, evidence, and drift pack is documented in
+[outputs/README.md](outputs/README.md).
 
 ## Reviewer acceptance and demo readiness outputs
 
-`python scripts/generate_review_readiness.py` writes deterministic review-readiness evidence to
-`outputs/readiness/` after the reviewer bundle, policy catalog, assurance history, and integrated
-assurance pack have been generated:
+Acceptance criteria, artifact completeness, and demo-readiness evidence are documented in
+[outputs/README.md](outputs/README.md).
 
-```text
-outputs/readiness/acceptance_checklist.json    # canonical acceptance checklist
-outputs/readiness/acceptance_checklist.csv     # reviewer-readable criterion results
-outputs/readiness/artifact_completeness.json   # semantic artifact completeness evidence
-outputs/readiness/demo_readiness.json          # aggregate local demo-readiness result
-outputs/readiness/review_readiness_report.md   # concise reviewer-readable readiness report
+## Validation
+
+The normal quality gates are:
+
+```bash
+python3 -m ruff check .
+python3 -m ruff format --check .
+python3 -m pytest -q
+python3 scripts/validate_repository.py
+python3 scripts/verify_offline_archive.py
 ```
 
-The readiness classification is deterministic: `ready_for_review` requires all required criteria
-to be demonstrated, `ready_with_limitations` is used for environment-blocked but otherwise
-available review artifacts, and `not_ready` is used when required criteria are incomplete. This is
-review-readiness evidence only. It is not human review, organisational approval,
-governance-board sign-off, production acceptance, external certification, or deployment evidence.
+The full path is `python3 scripts/run_portfolio_assurance.py`. It is safe to rerun and does not
+require credentials or external services.
 
-## Final portfolio assurance outputs
+## Limitations
 
-`python scripts/run_portfolio_assurance.py` runs the full deterministic generation pipeline, archive
-verification, quality gates, and reviewer smoke checks. It writes:
+This repository is a local portfolio demonstration. It does not provide live data access,
+authentication, production RBAC, deployment, hosting, monitoring, alerting, remediation, external
+attestation, regulatory interpretation, certification, or human approval. Matching archive
+checksums prove byte equality with selected files; they do not prove authenticity, correctness, or
+production readiness.
 
-```text
-outputs/final/portfolio_assurance_summary.json  # canonical final assurance summary
-outputs/final/portfolio_assurance_summary.md    # concise reviewer-readable summary
-```
+For the exact implemented/planned boundary, read [reports/architecture.md](reports/architecture.md),
+[governance/README.md](governance/README.md), and the demo runbook.
 
-The summary reports pipeline and quality-gate status, current posture, bounded risk score,
-review-readiness status, archive verification, key artifact references, and limitations. It is
-release-assurance evidence for this local synthetic portfolio, not production acceptance,
-certification, authenticity, or human approval.
+## Explicit non-goals
 
-## Reviewer navigation
-
-- [`docs/demo/reviewer-demo-runbook.md`](docs/demo/reviewer-demo-runbook.md) — deterministic
-  setup, walkthrough, drill-through IDs, shutdown, and claim boundaries
-- [`docs/demo/reviewer-walkthrough-template.md`](docs/demo/reviewer-walkthrough-template.md) —
-  blank notes template for an actual future review; not an approval record
-- [`outputs/README.md`](outputs/README.md) — generated-output locations and provenance boundaries
-- [`governance/controls/README.md`](governance/controls/README.md) — policy/control ownership and
-  evidence traceability
-- [`src/governance_platform/reviewer_app.py`](src/governance_platform/reviewer_app.py) — local
-  read-only Streamlit entrypoint
-
-## Architecture and design records
-
-- [`reports/architecture.md`](reports/architecture.md) — the seven-plane architecture and diagram
-- [`docs/architecture/decisions/`](docs/architecture/decisions/) — ADRs behind the foundational
-  choices
-- [`src/governance_platform/inventory/`](src/governance_platform/inventory/) — the Milestone 2
-  metadata/inventory plane implementation
-- [`src/governance_platform/access/`](src/governance_platform/access/) — the Milestone 3
-  access/research-control plane implementation
-- [`src/governance_platform/audit/`](src/governance_platform/audit/) — the Milestone 4
-  audit/evidence plane implementation
-- [`src/governance_platform/compliance/`](src/governance_platform/compliance/) — the Milestone 5
-  risk/compliance monitoring plane implementation
-- [`src/governance_platform/reporting/`](src/governance_platform/reporting/) — the Milestone 6
-  reporting and semantic snapshot implementation
-- [`src/governance_platform/reviewer/`](src/governance_platform/reviewer/) and
-  [`src/governance_platform/reviewer_app.py`](src/governance_platform/reviewer_app.py) — the
-  Milestone 7 local reviewer portal and Milestone 8 reviewer handoff exports
-- [`src/governance_platform/compliance/catalog.py`](src/governance_platform/compliance/catalog.py)
-  and [`governance/controls/`](governance/controls/) — the Milestone 9 policy/control catalog and
-  traceability documentation
-- [`src/governance_platform/compliance/assurance.py`](src/governance_platform/compliance/assurance.py)
-  — the Milestone 10 assurance-history snapshot and drift comparison implementation
-- [`src/governance_platform/reviewer/assurance_pack.py`](src/governance_platform/reviewer/assurance_pack.py)
-  — the Milestone 11 integrated assurance review pack implementation
-- [`src/governance_platform/reviewer/readiness.py`](src/governance_platform/reviewer/readiness.py)
-  and [`docs/demo/reviewer-walkthrough-template.md`](docs/demo/reviewer-walkthrough-template.md)
-  — the Milestone 12 reviewer acceptance and demo-readiness implementation
-- [`src/governance_platform/reviewer/archive.py`](src/governance_platform/reviewer/archive.py)
-  — the Milestone 13 offline archive manifest and checksum verifier
-- [`src/governance_platform/reviewer/final_assurance.py`](src/governance_platform/reviewer/final_assurance.py)
-  — the Milestone 14 final portfolio assurance summary
-- [`governance/`](governance/) — operating-model documentation per governance domain
-- [`infrastructure/snowflake/`](infrastructure/snowflake/) — intended Snowflake governance
-  responsibilities (no live account)
-- [`fabric/`](fabric/) — future Fabric/Power BI semantic-model and dashboard specifications
-
-## Non-affiliation and data statement
-
-This is an independent portfolio project. It is not affiliated with, endorsed by, or built
-against any real healthcare organisation, Snowflake account, Microsoft Fabric tenant, or Power BI
-workspace. All data referenced anywhere in this repository is, and will remain, synthetic. No
-real patient data (PHI/PII) is or will be used.
+No live Snowflake, Fabric, Power BI, Purview, Entra ID, SIEM, cloud deployment, public hosting,
+authentication, production monitoring, automatic remediation, workflow approvals, digital signing,
+external attestation, regulatory certification, or organisational sign-off is implemented.
