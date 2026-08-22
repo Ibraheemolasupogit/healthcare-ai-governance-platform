@@ -34,3 +34,10 @@ As of Milestone 5, `compliance/` is populated by running
 results, bounded risk indicators, a canonical compliance assessment summary, and a
 reviewer-readable governance posture report. This is local control evaluation over synthetic
 state only — not regulatory certification, live monitoring, alerting, or production enforcement.
+
+As of Milestone 6, `reporting/` is populated by running
+`python scripts/generate_reporting.py` (see the root
+[README's Reporting outputs section](../README.md#reporting-outputs)): deterministic governance
+KPI rows, a canonical reporting snapshot, and a concise executive summary. This is local reporting
+over synthetic state only — not a deployed Fabric semantic model, Power BI report, live refresh,
+or tenant integration.

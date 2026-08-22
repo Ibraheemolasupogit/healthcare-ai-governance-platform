@@ -26,7 +26,11 @@ inventory and access planes above already produce. As of Milestone 5,
 [`compliance_monitoring.md`](compliance_monitoring.md) has a concrete counterpart — local
 deterministic control evaluation and bounded risk indicators, not certification or live
 monitoring — in [`src/governance_platform/compliance/`](../src/governance_platform/compliance/).
-See each document's "Current status" section for exactly what that does and does not cover.
+As of Milestone 6, the implemented reporting plane in
+[`src/governance_platform/reporting/`](../src/governance_platform/reporting/) derives governance
+KPIs and executive summaries from those local outputs; the Fabric/Power BI files remain future
+architecture specifications, not deployed artifacts. See each document's "Current status" section
+for exactly what that does and does not cover.
 
 ## Domains
 

@@ -15,16 +15,18 @@ and how all of it is reported to oversight stakeholders.
 
 The platform is being built in milestones. **This repository currently contains Milestone 1
 (Platform Foundation), Milestone 2 (Synthetic Research & AI Inventory), Milestone 3 (Access &
-Research Control Plane), Milestone 4 (Audit & Evidence Plane), and Milestone 5 (Risk &
-Compliance Monitoring Plane).** Milestone 2 adds a typed, validated metadata/inventory plane and
-a deterministic synthetic dataset/model/research portfolio generated from it. Milestone 3 adds a
-**local governance simulation** of the access request → decision → grant → revocation/expiry
-workflow, evaluated deterministically against that inventory. Milestone 4 adds an append-only
-audit trail over Milestones 2–3's activity and a deterministic, reviewer-readable evidence pack
-derived from it. Milestone 5 adds deterministic control evaluation, compliance findings, bounded
-risk indicators, and a governance posture over that same local state. No model approval
-automation, responsible AI workflow automation, or live identity/RBAC/SIEM enforcement has been
-implemented yet. See
+Research Control Plane), Milestone 4 (Audit & Evidence Plane), Milestone 5 (Risk &
+Compliance Monitoring Plane), and Milestone 6 (Governance Reporting & Semantic Plane).**
+Milestone 2 adds a typed, validated metadata/inventory plane and a deterministic synthetic
+dataset/model/research portfolio generated from it. Milestone 3 adds a **local governance
+simulation** of the access request → decision → grant → revocation/expiry workflow, evaluated
+deterministically against that inventory. Milestone 4 adds an append-only audit trail over
+Milestones 2–3's activity and a deterministic, reviewer-readable evidence pack derived from it.
+Milestone 5 adds deterministic control evaluation, compliance findings, bounded risk indicators,
+and a governance posture over that same local state. Milestone 6 adds reporting-ready semantic
+contracts, deterministic governance KPIs, and an executive summary over existing outputs. No model
+approval automation, responsible AI workflow automation, live identity/RBAC/SIEM enforcement, or
+Fabric/Power BI deployment has been implemented yet. See
 [Implemented vs. Planned](#implemented-vs-planned) below before assuming any capability exists.
 
 ## Platform intent
@@ -53,7 +55,8 @@ BI, Docker, Terraform, GitHub Actions, and policy-as-code tooling.
 │   ├── inventory/              # Metadata/inventory plane: entities, generation, validation, I/O
 │   ├── access/                 # Access/research-control plane: request/decision/grant simulation
 │   ├── audit/                  # Audit/evidence plane: append-only log + evidence-pack generation
-│   └── compliance/             # Risk/compliance plane: controls, findings, posture outputs
+│   ├── compliance/             # Risk/compliance plane: controls, findings, posture outputs
+│   └── reporting/              # Reporting plane: deterministic KPIs and snapshots
 ├── governance/                 # Governance operating-model documentation
 ├── infrastructure/
 │   ├── docker/                 # Minimal local development container
@@ -66,7 +69,9 @@ BI, Docker, Terraform, GitHub Actions, and policy-as-code tooling.
 ├── outputs/
 │   ├── inventory/              # Generated inventory CSV/JSON (gitignored, reproducible)
 │   ├── access/                 # Generated access requests/decisions/grants (gitignored)
-│   └── evidence/               # Generated audit log + evidence pack (gitignored)
+│   ├── evidence/               # Generated audit log + evidence pack (gitignored)
+│   ├── compliance/             # Generated control/risk/posture outputs (gitignored)
+│   └── reporting/              # Generated reporting KPIs/snapshot (gitignored)
 ├── reports/
 │   └── architecture.md         # Full architecture write-up + diagram
 ├── docs/
@@ -75,12 +80,43 @@ BI, Docker, Terraform, GitHub Actions, and policy-as-code tooling.
 │   ├── generate_inventory.py   # Generate/validate/export the synthetic inventory
 │   ├── generate_access.py      # Generate/evaluate/validate/export the access-control state
 │   ├── generate_evidence.py    # Build the audit log/evidence pack from the above
-│   └── generate_compliance.py  # Evaluate controls and export compliance posture
-├── tests/                      # Foundation + inventory + access + audit + compliance tests
+│   ├── generate_compliance.py  # Evaluate controls and export compliance posture
+│   └── generate_reporting.py   # Build reporting KPIs and executive summary
+├── tests/                      # Foundation + inventory + access + audit + compliance + reporting
 └── .github/workflows/          # CI: install, lint, test, validate
 ```
 
 ## Implemented vs. Planned
+
+### Implemented (Milestone 6 — Governance Reporting & Semantic Plane)
+
+- The reporting plane (`src/governance_platform/reporting/`), as a **local deterministic
+  reporting layer** over existing synthetic governance state — not a deployed Microsoft Fabric
+  semantic model, Power BI report, live refresh, or tenant integration
+- Typed, immutable reporting models: `GovernanceKPI` and `ReportingSnapshot`, with strict enum
+  vocabularies for metric domains and units, source references on every KPI, and deterministic KPI
+  ordering
+- Governance KPIs derived from existing source-of-truth state and summary APIs: inventory posture,
+  dataset governance, model governance, research governance, access-control activity, grant
+  lifecycle status, rejected-access reasons, audit activity, evidence completeness, compliance
+  control results, risk indicators, bounded risk score, and overall governance posture
+- Loading, export, source-reference validation, and concise executive Markdown summary generation
+  — see [Reporting outputs](#reporting-outputs) below
+- `scripts/generate_reporting.py` — builds the same deterministic inventory, access, audit,
+  evidence, and compliance state as prior milestones, derives KPIs and a reporting snapshot,
+  writes outputs, then reloads and validates canonical JSON and source references
+- Fabric semantic-model and dashboard specifications in `fabric/semantic_model/` and
+  `fabric/dashboards/`, documenting future fact-style entities, dimension-style entities, keys,
+  relationships, grains, measures, pages, filters, and drill-through paths without creating or
+  claiming any deployed Fabric or Power BI artifact
+- pytest coverage for reporting model validation, metric calculations, source-reference integrity,
+  approval/pass-rate calculations, grant status metrics, audit metrics, compliance metrics, risk
+  metrics, snapshot construction, deterministic ordering, export/reload, deterministic output
+  generation, and synthetic-data safeguards
+
+This plane packages the current local governance state for review. It does not deploy Fabric,
+create `.pbix` files, call Fabric REST APIs, create workspaces, connect to Snowflake, perform live
+refresh, or assert regulatory certification.
 
 ### Implemented (Milestone 5 — Risk & Compliance Monitoring Plane)
 
@@ -250,8 +286,8 @@ automation, or any Snowflake connectivity (see [Explicit non-goals](#explicit-no
 - Real-time event streaming or production observability of any kind
 - An incident-response engine
 - A model approval / responsible-AI review workflow with automated checks
-- A built Fabric semantic model
-- Published Power BI governance dashboards
+- Deployed Fabric semantic model and live semantic-model refresh
+- Published Power BI governance dashboards or `.pbix`/PBIP artifacts
 - Any live Terraform deployment or cloud provisioning
 
 Do not treat anything in this list as available — it is documented here precisely so it isn't
@@ -259,8 +295,8 @@ assumed to exist.
 
 ### Explicit non-goals
 
-Milestones 2–5 are metadata, inventory, local access-control, audit/evidence, and compliance
-**simulations** only. They do not implement: Snowflake connectivity or deployed schemas, live
+Milestones 2–6 are metadata, inventory, local access-control, audit/evidence, compliance, and
+reporting **simulations** only. They do not implement: Snowflake connectivity or deployed schemas, live
 Snowflake RBAC or user/role provisioning, Entra ID integration, authentication, real user accounts,
 cloud identity, live Snowflake query-history/audit-log ingestion, a real SIEM, Microsoft Purview
 integration, Entra ID audit-log ingestion, real-time streaming, production observability, an
@@ -295,6 +331,9 @@ python scripts/generate_evidence.py
 
 # Evaluate controls, derive bounded risk indicators, and generate posture outputs (Milestone 5):
 python scripts/generate_compliance.py
+
+# Build reporting KPIs, snapshot, and executive summary (Milestone 6):
+python scripts/generate_reporting.py
 ```
 
 ### Using Docker instead
@@ -587,6 +626,35 @@ The generated canonical portfolio currently produces one responsible-AI readines
 pending high-risk LLM (`MD-0003`) and no failures. This is not predictive modelling, regulatory
 certification, live monitoring, alerting, or production policy enforcement.
 
+## Reporting outputs
+
+`python scripts/generate_reporting.py` writes the following to `outputs/reporting/`
+(gitignored — reproducible from `src/governance_platform/reporting/`, not stored as static
+artifacts, per ADR [0005](docs/architecture/decisions/0005-policy-as-code-and-evidence-as-code.md)):
+
+```text
+outputs/reporting/governance_kpis.json      # canonical reporting KPI rows
+outputs/reporting/governance_kpis.csv
+outputs/reporting/reporting_snapshot.json   # canonical, lossless ReportingSnapshot
+outputs/reporting/executive_summary.md      # concise reviewer/executive summary
+```
+
+The reporting flow is deterministic:
+
+```text
+Inventory + Access + Audit + Evidence + Compliance
+        -> Reporting Semantic Layer
+        -> Governance Metrics
+        -> Reviewer / Executive Views
+```
+
+Metrics include inventory counts and breakdowns, dataset/model/research governance posture,
+access-request approval and rejection metrics, grant lifecycle status, rejection reasons, audit
+event counts and completeness, evidence completeness, compliance pass/warning/failure metrics,
+findings by domain/severity, risk indicator counts, bounded risk score, and overall governance
+posture. Every KPI has source references back to the local source artifact(s). This is not a
+deployed Fabric semantic model, Power BI report, live refresh, or tenant integration.
+
 ## Architecture and design records
 
 - [`reports/architecture.md`](reports/architecture.md) — the seven-plane architecture and diagram
@@ -600,10 +668,12 @@ certification, live monitoring, alerting, or production policy enforcement.
   audit/evidence plane implementation
 - [`src/governance_platform/compliance/`](src/governance_platform/compliance/) — the Milestone 5
   risk/compliance monitoring plane implementation
+- [`src/governance_platform/reporting/`](src/governance_platform/reporting/) — the Milestone 6
+  reporting and semantic snapshot implementation
 - [`governance/`](governance/) — operating-model documentation per governance domain
 - [`infrastructure/snowflake/`](infrastructure/snowflake/) — intended Snowflake governance
   responsibilities (no live account)
-- [`fabric/`](fabric/) — intended Fabric/Power BI reporting architecture (nothing built yet)
+- [`fabric/`](fabric/) — future Fabric/Power BI semantic-model and dashboard specifications
 
 ## Non-affiliation and data statement
 
